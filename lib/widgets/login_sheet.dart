@@ -1,81 +1,21 @@
 import 'package:flutter/material.dart';
+import '../screens/auth/email_entry_screen.dart';
 
 class LoginSheet extends StatelessWidget {
   const LoginSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+    // We return the EmailEntryScreen which is a Scaffold.
+    // When shown in showModalBottomSheet with isScrollControlled: true,
+    // it will take up the full height (or as defined) and look like a page.
+    // We might need to wrap it in a SizedBox with height if we want it to be specific,
+    // but usually full screen auth flows in sheets want max height.
+    return const FractionallySizedBox(
+      heightFactor: 0.95, // Occupy most of the screen like a page
+      child: ClipRRect(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Log in or create an account',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Save your chat history and personalize your experience.',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-              ),
-            ],
-          ),
-          const SizedBox(height: 26),
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: Image.asset(
-              'assets/images/google_icon.png',
-              height: 28,
-              width: 28,
-            ), // Placeholder for Google
-            label: const Text('Continue with Google'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              side: const BorderSide(color: Colors.grey),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              elevation: 0,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              elevation: 0,
-            ),
-            child: const Text('Sign Up'),
-          ),
-          const SizedBox(height: 12),
-          TextButton(onPressed: () {}, child: const Text('Log In')),
-          const SizedBox(height: 24), // Add some bottom padding
-        ],
+        child: EmailEntryScreen(),
       ),
     );
   }
