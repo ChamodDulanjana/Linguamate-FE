@@ -8,7 +8,7 @@ class ActivitiesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Activities'),
-        backgroundColor: const Color.fromARGB(255, 255, 213, 122),
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
