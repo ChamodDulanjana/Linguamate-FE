@@ -8,16 +8,19 @@ class GrammarScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Grammar Rule'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.lightBlue,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
+
+      //Body
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
+              color: const Color.fromARGB(255, 217, 238, 255),
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -29,7 +32,11 @@ class GrammarScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lightbulb, color: Colors.amber, size: 28),
+                        const Icon(
+                          Icons.lightbulb,
+                          color: Colors.amber,
+                          size: 28,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           "Subject-Verb Agreement",
@@ -44,13 +51,20 @@ class GrammarScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     const Text(
                       "In English grammar, the subject and verb must agree in number. This means both must be singular or both must be plural.",
-                      style: TextStyle(fontSize: 16, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
+
+            //Examples
             Text(
               "Examples",
               style: Theme.of(
