@@ -8,7 +8,7 @@ class ActivitiesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Activities'),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 255, 213, 122),
         foregroundColor: Colors.black,
         elevation: 0,
       ),
@@ -17,6 +17,7 @@ class ActivitiesScreen extends StatelessWidget {
         children: [
           _buildActivityItem(
             context,
+            bgColor: const Color.fromARGB(255, 252, 236, 213),
             title: "Quizzes",
             subtitle: "Test your grammar knowledge",
             icon: Icons.quiz,
@@ -26,6 +27,7 @@ class ActivitiesScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _buildActivityItem(
             context,
+            bgColor: const Color.fromARGB(255, 214, 237, 255),
             title: "Fill in the Blanks",
             subtitle: "Complete the sentences",
             icon: Icons.edit_note,
@@ -35,6 +37,7 @@ class ActivitiesScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _buildActivityItem(
             context,
+            bgColor: const Color.fromARGB(255, 206, 235, 208),
             title: "Speaking Practice",
             subtitle: "Improve your pronunciation",
             icon: Icons.mic,
@@ -44,6 +47,7 @@ class ActivitiesScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _buildActivityItem(
             context,
+            bgColor: const Color.fromARGB(255, 230, 207, 235).withValues(alpha: 9.0),
             title: "Vocabulary Builder",
             subtitle: "Learn new words daily",
             icon: Icons.book,
@@ -61,9 +65,11 @@ class ActivitiesScreen extends StatelessWidget {
     required String subtitle,
     required IconData icon,
     required Color color,
+    required Color bgColor,
     required VoidCallback onTap,
   }) {
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
@@ -80,7 +86,7 @@ class ActivitiesScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: bgColor,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 30),
