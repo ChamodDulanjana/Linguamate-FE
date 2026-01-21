@@ -1,0 +1,230 @@
+import 'package:flutter/material.dart';
+import '../models/chat_message.dart';
+import '../widgets/chat_bubble.dart';
+import '../widgets/login_sheet.dart';
+
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _textController = TextEditingController();
+  final List<ChatMessage> _messages = [];
+  bool _isComposing = false;
+  bool _isTyping = false; // Bot typing indicator state
+
+  @override
+  void initState() {
+    super.initState();
+    // specific initial message
+    _messages.add(ChatMessage(text: "What can I help with?", isUser: false));
+  }
+
+  void _handleSubmitted(String text) {
+    _textController.clear();
+    setState(() {
+      _isComposing = false;
+      _messages.add(ChatMessage(text: text, isUser: true));
+      _isTyping = true;
+    });
+
+    // Mock AI Response
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text:
+                  "Here is the corrected version of your sentence. I noticed a small grammar issue.",
+              isUser: false,
+              hasActionButtons: true,
+            ),
+          );
+        });
+      }
+    });
+  }
+
+  void _showLoginSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const LoginSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+        title: const Text(
+          'LINGUAMATE',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: TextButton(
+              onPressed: _showLoginSheet,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.indigo,
+                backgroundColor: Colors.indigo.shade50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text('Log In'),
+            ),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: const Text("Guest User"),
+              accountEmail: const Text("Sign in to sync chats"),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, color: Colors.indigo),
+              ),
+              decoration: const BoxDecoration(color: Colors.indigo),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Previous Chats'),
+              onTap: () {
+                Navigator.pop(context);
+                // Placeholder
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                // Placeholder
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _messages.isEmpty
+                ? const Center(child: Text("Start chatting!"))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    reverse:
+                        true, // Show latest messages at bottom? No, standard chat usually bottom-up but list is chronological.
+                    // Actually, for ChatGPT style, it's top-down but auto-scrolls.
+                    // Let's stick to standard reversed list for easy implementations if we added to index 0.
+                    // But here I'm adding to end. Let's make it standard connection.
+                    itemCount: _messages.length + (_isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // Adjust index for typing indicator if present
+                      if (_isTyping && index == _messages.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            "Linguamate is typing...",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        );
+                      }
+
+                      // For standard list view (not reversed), index 0 is top.
+                      // I will use a simple mapping.
+                      return ChatBubble(message: _messages[index]);
+                    },
+                  ),
+          ),
+          const Divider(height: 1.0),
+          Container(
+            decoration: BoxDecoration(color: Theme.of(context).cardColor),
+            child: _buildTextComposer(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextComposer() {
+    return IconTheme(
+      data: IconThemeData(color: Theme.of(context).colorScheme.secondary),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextField(
+                controller: _textController,
+                onChanged: (text) {
+                  setState(() {
+                    _isComposing = text.isNotEmpty;
+                  });
+                },
+                decoration: const InputDecoration.collapsed(
+                  hintText: "Message Linguamate...",
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: IconButton(
+                icon: Icon(
+                  _isComposing ? Icons.send : Icons.mic,
+                  color: _isComposing ? Colors.indigo : Colors.grey,
+                ),
+                onPressed: _isComposing
+                    ? () => _handleSubmitted(_textController.text)
+                    : () {
+                        // Mic logic placeholder
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Mic feature not implemented yet"),
+                          ),
+                        );
+                      },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
