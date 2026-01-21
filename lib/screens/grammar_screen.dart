@@ -8,8 +8,9 @@ class GrammarScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Grammar Rule'),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -35,7 +36,7 @@ class GrammarScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.indigo,
+                                color: Colors.black,
                               ),
                         ),
                       ],

@@ -18,7 +18,12 @@ class LinguaMateApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        primarySwatch: Colors.indigo,
+        primaryColor: Colors.black,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.black,
+          primary: Colors.black,
+          secondary: Colors.grey,
+        ),
         scaffoldBackgroundColor: const Color(
           0xFFF5F7FB,
         ), // Light greyish background

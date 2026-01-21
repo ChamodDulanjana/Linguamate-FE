@@ -124,9 +124,9 @@ class _ChatScreenState extends State<ChatScreen> {
               accountEmail: const Text("Sign in to sync chats"),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.indigo),
+                child: Icon(Icons.person, color: Colors.black),
               ),
-              decoration: const BoxDecoration(color: Colors.indigo),
+              decoration: const BoxDecoration(color: Colors.black),
             ),
             ListTile(
               leading: const Icon(Icons.history),
@@ -231,7 +231,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: IconButton(
                 icon: Icon(
                   _isComposing ? Icons.send : Icons.mic,
-                  color: _isComposing ? Colors.indigo : Colors.grey,
+                  color: _isComposing ? Colors.black : Colors.grey,
                 ),
                 onPressed: _isComposing
                     ? () => _handleSubmitted(_textController.text)

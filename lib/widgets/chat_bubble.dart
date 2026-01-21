@@ -14,7 +14,7 @@ class ChatBubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: message.isUser ? Colors.indigo : Colors.white,
+          color: message.isUser ? Colors.grey[800] : Colors.white,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -56,6 +56,7 @@ class ChatBubble extends StatelessWidget {
                   _ActionButton(
                     label: "LEARN",
                     icon: Icons.school_outlined,
+                    color: Colors.blue,
                     onTap: () {
                       Navigator.pushNamed(context, '/grammar');
                     },
@@ -64,6 +65,7 @@ class ChatBubble extends StatelessWidget {
                     label: "ACTIVITIES",
                     icon: Icons
                         .fitness_center_outlined, // 'Activity' icon equivalent
+                    color: Colors.orange,
                     onTap: () {
                       Navigator.pushNamed(context, '/activities');
                     },
@@ -82,11 +84,13 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final Color color;
 
   const _ActionButton({
     required this.label,
     required this.icon,
     required this.onTap,
+    required this.color,
   });
 
   @override
@@ -97,19 +101,19 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.indigo.shade50,
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.indigo.withOpacity(0.2)),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: Colors.indigo),
+            Icon(icon, size: 16, color: color),
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.indigo,
+              style: TextStyle(
+                color: color,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
