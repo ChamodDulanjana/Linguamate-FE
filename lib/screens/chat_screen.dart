@@ -16,12 +16,12 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isComposing = false;
   bool _isTyping = false; // Bot typing indicator state
 
-  @override
-  void initState() {
-    super.initState();
-    // specific initial message
-    _messages.add(ChatMessage(text: "What can I help with?", isUser: false));
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // specific initial message
+  //   _messages.add(ChatMessage(text: "What can I help with?", isUser: false));
+  // }
 
   void _handleSubmitted(String text) {
     _textController.clear();
@@ -82,8 +82,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextButton(
               onPressed: _showLoginSheet,
               style: TextButton.styleFrom(
-                foregroundColor: Colors.indigo,
-                backgroundColor: Colors.indigo.shade50,
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -130,7 +130,16 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: _messages.isEmpty
-                ? const Center(child: Text("Start chatting!"))
+                ? const Center(
+                    child: Text(
+                      "Let's Learn Grammar together!",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 87, 87, 87),
+                      ),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(8.0),
                     reverse:
@@ -160,11 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
           ),
-          const Divider(height: 1.0),
-          Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer(),
-          ),
+          _buildTextComposer(),
         ],
       ),
     );
@@ -174,7 +179,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return IconTheme(
       data: IconThemeData(color: Theme.of(context).colorScheme.secondary),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 26.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
@@ -199,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   });
                 },
                 decoration: const InputDecoration.collapsed(
-                  hintText: "Message Linguamate...",
+                  hintText: "Ask Linguamate...",
                 ),
               ),
             ),
