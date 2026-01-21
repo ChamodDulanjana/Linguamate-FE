@@ -33,9 +33,10 @@ class LoginSheet extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {},
-            icon: const Icon(
-              Icons.g_mobiledata,
-              size: 28,
+            icon: Image.asset(
+              'assets/images/google_icon.png',
+              height: 28,
+              width: 28,
             ), // Placeholder for Google
             label: const Text('Continue with Google'),
             style: ElevatedButton.styleFrom(
