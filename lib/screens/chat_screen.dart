@@ -12,9 +12,29 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isComposing = false;
   bool _isTyping = false; // Bot typing indicator state
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   // @override
   // void initState() {
@@ -30,6 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.add(ChatMessage(text: text, isUser: true));
       _isTyping = true;
     });
+    _scrollToBottom();
 
     // Mock AI Response
     Future.delayed(const Duration(seconds: 2), () {
@@ -45,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           );
         });
+        _scrollToBottom();
       }
     });
   }
@@ -141,12 +163,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   )
                 : ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
-                    reverse:
-                        true, // Show latest messages at bottom? No, standard chat usually bottom-up but list is chronological.
-                    // Actually, for ChatGPT style, it's top-down but auto-scrolls.
-                    // Let's stick to standard reversed list for easy implementations if we added to index 0.
-                    // But here I'm adding to end. Let's make it standard connection.
                     itemCount: _messages.length + (_isTyping ? 1 : 0),
                     itemBuilder: (context, index) {
                       // Adjust index for typing indicator if present
