@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
+import '../widgets/menu_drawer.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -115,39 +116,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: const Text("Guest User"),
-              accountEmail: const Text("Sign in to sync chats"),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.black),
-              ),
-              decoration: const BoxDecoration(color: Colors.black),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Previous Chats'),
-              onTap: () {
-                Navigator.pop(context);
-                // Placeholder
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context);
-                // Placeholder
-              },
-            ),
-          ],
-        ),
-      ),
+      drawer: const MenuDrawer(),
       body: Column(
         children: [
           Expanded(
