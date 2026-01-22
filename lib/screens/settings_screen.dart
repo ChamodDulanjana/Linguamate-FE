@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -21,7 +22,6 @@ class SettingsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         child: Column(
@@ -58,7 +58,28 @@ class SettingsScreen extends StatelessWidget {
 
             // Edit Profile Button
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => Container(
+                    // height removed to fit content
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF5F7FB),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                      child: const EditProfileScreen(),
+                    ),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
@@ -118,20 +139,14 @@ class SettingsScreen extends StatelessWidget {
 
             // General Settings
             _buildSettingsContainer([
-              _buildSettingItem(
-                icon: Icons.graphic_eq,
-                title: 'Voice',
-              ),
+              _buildSettingItem(icon: Icons.graphic_eq, title: 'Voice'),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
                 icon: Icons.security_outlined,
                 title: 'Security',
               ),
               const Divider(height: 1, indent: 50),
-              _buildSettingItem(
-                icon: Icons.info_outline,
-                title: 'About',
-              ),
+              _buildSettingItem(icon: Icons.info_outline, title: 'About'),
             ]),
             const SizedBox(height: 24),
 
