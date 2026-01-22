@@ -43,15 +43,19 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
@@ -67,7 +71,9 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                   const SizedBox(height: 20),
                   Center(
                     child: Image.asset(
-                      'assets/images/linguamate_logo.png',
+                      isDarkMode
+                          ? 'assets/images/linguamate_light_logo.png'
+                          : 'assets/images/linguamate_logo.png',
                       height: 100,
                     ),
                   ),
@@ -77,23 +83,36 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Save your chat history and personalize your experience.',
                     textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                   const SizedBox(height: 40),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isDarkMode
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
@@ -103,8 +122,8 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                   ElevatedButton(
                     onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -138,8 +157,12 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                     label: const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      foregroundColor: Colors.black,
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      side: BorderSide(
+                        color: isDarkMode
+                            ? Colors.grey.shade700
+                            : Colors.grey[300]!,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
