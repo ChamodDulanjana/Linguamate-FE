@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_password_screen.dart';
 import 'signup_screen.dart';
+import '../../utils/validators.dart';
 
 class EmailEntryScreen extends StatefulWidget {
   const EmailEntryScreen({super.key});
@@ -96,16 +97,9 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: Validators.email,
                   ),
+                  
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _handleContinue,
