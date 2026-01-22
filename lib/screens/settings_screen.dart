@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
+import '../widgets/appearance_dialog.dart';
+import '../utils/theme_manager.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -121,20 +123,26 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Appearance & Accent
-            _buildSettingsContainer([
-              _buildSettingItem(
-                icon: Icons.wb_sunny_outlined,
-                title: 'Appearance',
-                subtitle: 'System (Default)',
-              ),
-              const Divider(height: 1, indent: 50),
-              _buildSettingItem(
-                icon: Icons.brush_outlined,
-                title: 'Accent color',
-                subtitle: 'Default',
-                showDropdownIcon: true,
-              ),
-            ]),
+            AnimatedBuilder(
+              animation: ThemeManager.instance,
+              builder: (context, child) {
+                return _buildSettingsContainer([
+                  _buildSettingItem(
+                    icon: Icons.wb_sunny_outlined,
+                    title: 'Appearance',
+                    subtitle: ThemeManager.instance.themeName,
+                    onTap: () => _showAppearanceDialog(context),
+                  ),
+                  const Divider(height: 1, indent: 50),
+                  _buildSettingItem(
+                    icon: Icons.brush_outlined,
+                    title: 'Accent color',
+                    subtitle: 'Default',
+                    showDropdownIcon: true,
+                  ),
+                ]);
+              },
+            ),
             const SizedBox(height: 24),
 
             // General Settings
@@ -200,6 +208,7 @@ class SettingsScreen extends StatelessWidget {
     Color iconColor = Colors.black,
     bool showArrow = true,
     bool showDropdownIcon = false,
+    VoidCallback? onTap,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -227,7 +236,11 @@ class SettingsScreen extends StatelessWidget {
                     color: Colors.grey,
                   )
                 : null),
-      onTap: () {},
+      onTap: onTap ?? () {},
     );
+  }
+
+  void _showAppearanceDialog(BuildContext context) {
+    showDialog(context: context, builder: (context) => AppearanceDialog());
   }
 }
