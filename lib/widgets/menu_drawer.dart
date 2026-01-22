@@ -11,7 +11,7 @@ class MenuDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           Expanded(
@@ -25,6 +25,7 @@ class MenuDrawer extends StatelessWidget {
   }
 
   Widget _buildGuestContent(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(
         left: 20.0,
@@ -39,7 +40,7 @@ class MenuDrawer extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/edit_icon.png',
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
                 width: 20,
                 height: 20,
               ),
@@ -57,11 +58,13 @@ class MenuDrawer extends StatelessWidget {
           const SizedBox(height: 24),
           _buildSimpleMenuItem("Settings"),
           const Spacer(),
-          const Text(
+          Text(
             "Save your chat history and personalize your experience.",
             style: TextStyle(
               fontSize: 14,
-              color: Color.fromARGB(221, 128, 128, 128),
+              color: isDarkMode
+                  ? Colors.grey[400]
+                  : const Color.fromARGB(221, 128, 128, 128),
               height: 1.4,
             ),
           ),
@@ -79,8 +82,8 @@ class MenuDrawer extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -109,6 +112,7 @@ class MenuDrawer extends StatelessWidget {
   }
 
   Widget _buildUserContent(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         // Top Section with Search
@@ -123,7 +127,9 @@ class MenuDrawer extends StatelessWidget {
                     hintStyle: TextStyle(color: Colors.grey[600]),
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: isDarkMode
+                        ? Colors.grey.withOpacity(0.1)
+                        : Colors.grey[100],
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -141,7 +147,11 @@ class MenuDrawer extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             children: [
-              _buildMenuItem('assets/images/edit_icon.png', "New chat"),
+              _buildMenuItem(
+                'assets/images/edit_icon.png',
+                "New chat",
+                context,
+              ),
               const SizedBox(height: 24),
 
               // Pinned/Recent Chats
@@ -163,7 +173,11 @@ class MenuDrawer extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   final chat = chatHistories[index];
-                  return _buildHistoryItem(chat.title, isPinned: chat.isPinned);
+                  return _buildHistoryItem(
+                    chat.title,
+                    context,
+                    isPinned: chat.isPinned,
+                  );
                 },
               ),
             ],
@@ -173,7 +187,7 @@ class MenuDrawer extends StatelessWidget {
         // Bottom Profile Section
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -194,7 +208,7 @@ class MenuDrawer extends StatelessWidget {
               child: Text(
                 "CD",
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.black, // Keep black on Gold
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -217,15 +231,20 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(String path, String title) {
+  Widget _buildMenuItem(String path, String title, BuildContext context) {
     return ListTile(
-      leading: Image.asset(path, color: Colors.black, width: 20, height: 20),
+      leading: Image.asset(
+        path,
+        color: Theme.of(context).colorScheme.onSurface,
+        width: 20,
+        height: 20,
+      ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
-          color: Colors.black,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       dense: true,
@@ -235,13 +254,20 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem(String title, {bool isPinned = false}) {
+  Widget _buildHistoryItem(
+    String title,
+    BuildContext context, {
+    bool isPinned = false,
+  }) {
     return ListTile(
       title: Text(
         title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 14, color: Colors.black87),
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
+        ),
       ),
       trailing: isPinned
           ? const Icon(Icons.push_pin, size: 16, color: Colors.grey)
