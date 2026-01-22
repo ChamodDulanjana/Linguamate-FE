@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_password_screen.dart';
+import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../../utils/validators.dart';
 
@@ -27,12 +27,10 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
       // For this demo, let's say 'test@example.com' exists, others are new.
       final exists = email == 'test@example.com';
 
-      if (exists) {
+      if (!exists) {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => LoginPasswordScreen(email: email),
-          ),
+          MaterialPageRoute(builder: (context) => LoginScreen(email: email)),
         );
       } else {
         Navigator.push(
