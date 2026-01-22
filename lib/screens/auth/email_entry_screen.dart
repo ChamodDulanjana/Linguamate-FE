@@ -62,6 +62,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Form(
               key: _formKey,
+              //autovalidateMode: AutovalidateMode.onUserInteraction,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -99,7 +100,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
                   ),
-                  
+
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _handleContinue,
