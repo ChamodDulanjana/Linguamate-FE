@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/chat_history.dart';
+import '../screens/settings_screen.dart';
 import 'login_sheet.dart';
 
 class MenuDrawer extends StatelessWidget {
@@ -203,7 +204,13 @@ class MenuDrawer extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             trailing: const Icon(Icons.more_horiz, color: Colors.grey),
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
         ),
       ],
