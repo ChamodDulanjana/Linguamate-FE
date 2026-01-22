@@ -24,10 +24,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F7FB),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFF5F7FB),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -41,7 +42,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.close, color: Colors.black),
+                  icon: Icon(
+                    Icons.close,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -64,7 +68,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: Colors.black, // Keep black on Gold
                           ),
                         ),
                       ),
@@ -82,9 +86,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDarkMode
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.white,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              border: Border.all(
+                                color: isDarkMode
+                                    ? Theme.of(context).colorScheme.surface
+                                    : Colors.white,
+                                width: 2,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
@@ -92,10 +103,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ),
                               ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.camera_alt,
                               size: 20,
-                              color: Colors.black,
+                              color: isDarkMode ? Colors.white : Colors.black,
                             ),
                           ),
                         ),
@@ -128,8 +139,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -159,23 +172,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextEditingController controller, {
     bool readOnly = false,
   }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Text(
-        //   label,
-        //   style: TextStyle(
-        //     fontSize: 14,
-        //     fontWeight: FontWeight.w500,
-        //     color: Colors.grey[600],
-        //   ),
-        // ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           readOnly: readOnly,
           style: TextStyle(
-            color: readOnly ? Colors.grey[600] : Colors.black,
+            color: readOnly
+                ? (isDarkMode ? Colors.grey[400] : Colors.grey[600])
+                : Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
@@ -183,25 +191,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             labelStyle: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: isDarkMode ? Colors.grey.withOpacity(0.1) : Colors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.black),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),

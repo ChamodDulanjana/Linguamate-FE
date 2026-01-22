@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -30,11 +30,11 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 40),
             Text(
               'LINGUAMATE',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -43,9 +43,11 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Text(
                 'An AI-Powered Interactive Language Learning Application',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.black87,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.87),
                   height: 1.2,
                 ),
               ),

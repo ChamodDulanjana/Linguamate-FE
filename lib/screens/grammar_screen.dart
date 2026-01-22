@@ -5,13 +5,9 @@ class GrammarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Grammar Rule'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Grammar Rule')),
 
       //Body
       body: SingleChildScrollView(
@@ -20,7 +16,9 @@ class GrammarScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Card(
-              color: const Color.fromARGB(255, 217, 238, 255),
+              color: isDarkMode
+                  ? const Color(0xFF1E2A38)
+                  : const Color.fromARGB(255, 217, 238, 255),
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -41,21 +39,14 @@ class GrammarScreen extends StatelessWidget {
                         Text(
                           "Subject-Verb Agreement",
                           style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     const Text(
                       "In English grammar, the subject and verb must agree in number. This means both must be singular or both must be plural.",
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                        color: Colors.black,
-                      ),
+                      style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                   ],
                 ),

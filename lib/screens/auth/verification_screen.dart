@@ -17,15 +17,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -49,16 +45,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Enter the verification code we just sent to ${widget.email}.',
                     textAlign: TextAlign.center,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 40),
 
@@ -72,7 +65,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if(value == null || value.isEmpty){
+                      if (value == null || value.isEmpty) {
                         return 'Code cannot be empty';
                       }
                       return null;
@@ -81,7 +74,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       LengthLimitingTextInputFormatter(6),
                       FilteringTextInputFormatter.digitsOnly,
                     ],
-
                   ),
 
                   const SizedBox(height: 24),
@@ -91,15 +83,19 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Verification Successful!')),
+                          const SnackBar(
+                            content: Text('Verification Successful!'),
+                          ),
                         );
 
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst);
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -128,8 +124,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      foregroundColor: Colors.black,
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      side: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade700
+                            : Colors.grey.shade300,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

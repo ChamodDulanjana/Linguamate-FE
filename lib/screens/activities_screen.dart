@@ -6,12 +6,7 @@ class ActivitiesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Activities'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Activities')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -47,7 +42,12 @@ class ActivitiesScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _buildActivityItem(
             context,
-            bgColor: const Color.fromARGB(255, 230, 207, 235).withValues(alpha: 9.0),
+            bgColor: const Color.fromARGB(
+              255,
+              230,
+              207,
+              235,
+            ).withValues(alpha: 9.0),
             title: "Vocabulary Builder",
             subtitle: "Learn new words daily",
             icon: Icons.book,
@@ -68,8 +68,9 @@ class ActivitiesScreen extends StatelessWidget {
     required Color bgColor,
     required VoidCallback onTap,
   }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Card(
-      color: Colors.white,
+      color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(

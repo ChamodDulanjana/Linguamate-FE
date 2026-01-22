@@ -105,8 +105,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextButton(
               onPressed: _showLoginSheet,
               style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.black,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -163,17 +163,22 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildTextComposer() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return IconTheme(
       data: IconThemeData(color: Theme.of(context).colorScheme.secondary),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 26.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade300,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.grey.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
