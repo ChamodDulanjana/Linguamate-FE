@@ -8,19 +8,27 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB), // Light grey background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Settings',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFF5F7FB),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -43,18 +51,22 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            const SizedBox(height: 12),
+            Text(
               'chamoddulanjana',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'chamoddulanjana',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -67,9 +79,9 @@ class SettingsScreen extends StatelessWidget {
                   backgroundColor: Colors.transparent,
                   builder: (context) => Container(
                     // height removed to fit content
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF5F7FB),
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(20),
                       ),
                     ),
@@ -83,10 +95,16 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: isDarkMode
+                    ? Theme.of(context).colorScheme.surface
+                    : Colors.white,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
                 elevation: 0,
-                side: BorderSide(color: Colors.grey.shade300),
+                side: BorderSide(
+                  color: isDarkMode
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade300,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -100,21 +118,24 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 30),
 
             // Account Section
-            _buildSectionHeader('Account'),
-            _buildSettingsContainer([
+            _buildSectionHeader(context, 'Account'),
+            _buildSettingsContainer(context, [
               _buildSettingItem(
+                context,
                 icon: Icons.person_2_outlined,
                 title: 'Name',
                 subtitle: 'chamod dulanjana',
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
+                context,
                 icon: Icons.email_outlined,
                 title: 'Email',
                 subtitle: 'chamodperera128@gmail.com',
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
+                context,
                 icon: Icons.phone_outlined,
                 title: 'Phone number',
                 subtitle: '+94773810577',
@@ -126,8 +147,9 @@ class SettingsScreen extends StatelessWidget {
             AnimatedBuilder(
               animation: ThemeManager.instance,
               builder: (context, child) {
-                return _buildSettingsContainer([
+                return _buildSettingsContainer(context, [
                   _buildSettingItem(
+                    context,
                     icon: Icons.wb_sunny_outlined,
                     title: 'Appearance',
                     subtitle: ThemeManager.instance.themeName,
@@ -135,6 +157,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 50),
                   _buildSettingItem(
+                    context,
                     icon: Icons.brush_outlined,
                     title: 'Accent color',
                     subtitle: 'Default',
@@ -146,21 +169,31 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // General Settings
-            _buildSettingsContainer([
-              _buildSettingItem(icon: Icons.graphic_eq, title: 'Voice'),
+            _buildSettingsContainer(context, [
+              _buildSettingItem(
+                context,
+                icon: Icons.graphic_eq,
+                title: 'Voice',
+              ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
+                context,
                 icon: Icons.security_outlined,
                 title: 'Security',
               ),
               const Divider(height: 1, indent: 50),
-              _buildSettingItem(icon: Icons.info_outline, title: 'About'),
+              _buildSettingItem(
+                context,
+                icon: Icons.info_outline,
+                title: 'About',
+              ),
             ]),
             const SizedBox(height: 24),
 
             // Log out
-            _buildSettingsContainer([
+            _buildSettingsContainer(context, [
               _buildSettingItem(
+                context,
                 icon: Icons.logout,
                 title: 'Log out',
                 textColor: Colors.red,
@@ -175,7 +208,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(bottom: 8, left: 4),
@@ -190,45 +223,59 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsContainer(List<Widget> children) {
+  Widget _buildSettingsContainer(BuildContext context, List<Widget> children) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(children: children),
     );
   }
 
-  Widget _buildSettingItem({
+  Widget _buildSettingItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
-    Color textColor = Colors.black,
-    Color iconColor = Colors.black,
+    Color? textColor,
+    Color? iconColor,
     bool showArrow = true,
     bool showDropdownIcon = false,
     VoidCallback? onTap,
   }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final effectiveTextColor =
+        textColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveIconColor =
+        iconColor ?? Theme.of(context).colorScheme.onSurface;
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Icon(icon, color: iconColor, size: 24),
+      leading: Icon(icon, color: effectiveIconColor, size: 24),
       title: Text(
         title,
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: textColor,
+          color: effectiveTextColor,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
             )
           : null,
       trailing: showDropdownIcon
-          ? const Icon(Icons.keyboard_arrow_down, color: Colors.black)
+          ? Icon(
+              Icons.keyboard_arrow_down,
+              color: Theme.of(context).colorScheme.onSurface,
+            )
           : (showArrow
                 ? const Icon(
                     Icons.arrow_forward_ios,
