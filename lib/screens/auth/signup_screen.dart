@@ -43,12 +43,15 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -64,7 +67,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Logo
                   Center(
                     child: Image.asset(
-                      'assets/images/linguamate_logo.png',
+                      isDarkMode
+                          ? 'assets/images/linguamate_light_logo.png'
+                          : 'assets/images/linguamate_logo.png',
                       height: 100,
                     ),
                   ),
