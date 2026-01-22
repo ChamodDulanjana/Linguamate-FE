@@ -116,7 +116,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      drawer: const MenuDrawer(),
+      drawer: MenuDrawer(),
       body: Column(
         children: [
           Expanded(

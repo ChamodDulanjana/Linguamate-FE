@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/models/chat_history.dart';
 import 'login_sheet.dart';
 
 class MenuDrawer extends StatelessWidget {
   final bool isLoggedIn;
 
-  const MenuDrawer({super.key, this.isLoggedIn = false});
+  MenuDrawer({super.key, this.isLoggedIn = true});
 
   @override
   Widget build(BuildContext context) {
@@ -115,24 +116,21 @@ class MenuDrawer extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 16),
-                      const Icon(Icons.search, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Text('Search', style: TextStyle(color: Colors.grey[600])),
-                    ],
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              const Icon(Icons.edit_square, color: Colors.black),
             ],
           ),
         ),
@@ -142,62 +140,79 @@ class MenuDrawer extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             children: [
-              _buildMenuItem(Icons.edit_square, "New chat"),
-              _buildMenuItem(Icons.image_outlined, "Images"),
-              _buildMenuItem(Icons.grid_view, "Apps"),
-              _buildMenuItem(Icons.create_new_folder_outlined, "New project"),
+              _buildMenuItem('assets/images/edit_icon.png', "New chat"),
               const SizedBox(height: 24),
+
               // Pinned/Recent Chats
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 10),
                 child: Text(
                   "Recent",
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
               ),
-              _buildHistoryItem("Machine building assistance", isPinned: true),
-              _buildHistoryItem("Animated Logo Request"),
-              _buildHistoryItem("Arduino Expert Assistance"),
-              _buildHistoryItem("LINGUAMATE AI Flutter Dev"),
-              _buildHistoryItem("Blue Penguin Mascot Design"),
-              _buildHistoryItem("AI App Design Guide"),
-              _buildHistoryItem("Logo for AI App"),
-              _buildHistoryItem("Cryptography Exam Notes"),
+
+              ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 0,
+                  vertical: 2.0,
+                ),
+                itemCount: chatHistories.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final chat = chatHistories[index];
+                  return _buildHistoryItem(chat.title, isPinned: chat.isPinned);
+                },
+              ),
             ],
           ),
         ),
 
         // Bottom Profile Section
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-          leading: const CircleAvatar(
-            backgroundColor: Color(0xFFFFD700), // Gold/Yellow color
-            child: Text(
-              "CD",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
+          child: ListTile(
+            contentPadding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: 12,
+            ),
+            leading: const CircleAvatar(
+              backgroundColor: Color(0xFFFFD700), // Gold/Yellow color
+              child: Text(
+                "CD",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
+            title: const Text(
+              "Chamod Dulanjana",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            trailing: const Icon(Icons.more_horiz, color: Colors.grey),
+            onTap: () {},
           ),
-          title: const Text(
-            "Chamod Dulanjana",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-          trailing: const Icon(Icons.more_horiz, color: Colors.grey),
-          onTap: () {},
         ),
       ],
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title) {
+  Widget _buildMenuItem(String path, String title) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black87, size: 22),
+      leading: Image.asset(path, color: Colors.black, width: 20, height: 20),
       title: Text(
         title,
         style: const TextStyle(
@@ -230,4 +245,15 @@ class MenuDrawer extends StatelessWidget {
       onTap: () {},
     );
   }
+
+  final List<ChatHistory> chatHistories = [
+    ChatHistory(title: 'Machine building assistance', isPinned: true),
+    ChatHistory(title: 'Animated Logo Request'),
+    ChatHistory(title: 'Arduino Expert Assistance'),
+    ChatHistory(title: 'LINGUAMATE AI Flutter Dev'),
+    ChatHistory(title: 'Blue Penguin Mascot Design'),
+    ChatHistory(title: 'AI App Design Guide'),
+    ChatHistory(title: 'Logo for AI App'),
+    ChatHistory(title: 'Cryptography Exam Notes', isPinned: false),
+  ];
 }
