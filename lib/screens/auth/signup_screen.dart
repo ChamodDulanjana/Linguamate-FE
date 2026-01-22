@@ -50,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDarkMode ? Colors.transparent : const Color.fromARGB(0, 255, 251, 251),
         surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
