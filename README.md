@@ -1,4 +1,4 @@
-# flutter_application_1
+# LinguaMate-FE
 
 A new Flutter project.
 
