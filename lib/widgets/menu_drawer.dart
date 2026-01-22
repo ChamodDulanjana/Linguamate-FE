@@ -276,6 +276,7 @@ class MenuDrawer extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       visualDensity: VisualDensity.compact,
       onTap: () {},
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 
