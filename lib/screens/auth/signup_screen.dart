@@ -41,13 +41,15 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -60,10 +62,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 Center(
                   child: Image.asset(
                     'assets/images/linguamate_logo.png',
-                    height: 80,
+                    height: 100,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 Text(
                   'Create your account',
                   textAlign: TextAlign.center,
