@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
 import 'fill_in_blanks_screen.dart';
+import 'speaking_practice_screen.dart';
 
 class ActivitiesScreen extends StatelessWidget {
   const ActivitiesScreen({super.key});
@@ -51,7 +52,14 @@ class ActivitiesScreen extends StatelessWidget {
             subtitle: "Improve your pronunciation",
             icon: Icons.mic,
             color: Colors.green,
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SpeakingPracticeScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           // _buildActivityItem(
