@@ -95,7 +95,9 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           },
         ),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color.fromARGB(0, 255, 251, 251),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.transparent
+            : const Color.fromARGB(0, 255, 251, 251),
         surfaceTintColor: Colors.transparent,
         title: const Text(
           'LINGUAMATE',
@@ -124,13 +126,32 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: _messages.isEmpty
                 ? const Center(
-                    child: Text(
-                      "Let's Learn Grammar together!",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 87, 87, 87),
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text(
+                          "Start Practicing!",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 87, 87, 87),
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        SizedBox(
+                          width: 300,
+                          child: Text(
+                            "Type a sentence and I'll help you correct your grammar.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Color.fromARGB(255, 87, 87, 87),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(
