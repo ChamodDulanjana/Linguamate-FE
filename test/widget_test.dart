@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_application_1/main.dart'; // Ensure this matches your project name in pubspec.yaml. Assuming default based on file structure.
+import 'package:LinguaMate/main.dart'; // Ensure this matches your project name in pubspec.yaml. Assuming default based on file structure.
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

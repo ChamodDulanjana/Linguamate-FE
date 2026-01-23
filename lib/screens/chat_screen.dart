@@ -95,6 +95,8 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           },
         ),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color.fromARGB(0, 255, 251, 251),
+        surfaceTintColor: Colors.transparent,
         title: const Text(
           'LINGUAMATE',
           style: TextStyle(fontWeight: FontWeight.bold),

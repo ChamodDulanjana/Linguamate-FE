@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/utils/validators.dart';
+import '../../utils/validators.dart';
 import 'verification_screen.dart';
 
 class SignupScreen extends StatefulWidget {
