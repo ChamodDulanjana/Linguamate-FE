@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
+import 'fill_in_blanks_screen.dart';
 
 class ActivitiesScreen extends StatelessWidget {
   const ActivitiesScreen({super.key});
@@ -33,7 +34,14 @@ class ActivitiesScreen extends StatelessWidget {
             subtitle: "Complete the sentences",
             icon: Icons.edit_note,
             color: Colors.blue,
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FillInBlanksScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           _buildActivityItem(
