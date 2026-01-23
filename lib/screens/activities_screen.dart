@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'quiz_screen.dart';
 
 class ActivitiesScreen extends StatelessWidget {
   const ActivitiesScreen({super.key});
@@ -17,7 +18,12 @@ class ActivitiesScreen extends StatelessWidget {
             subtitle: "Test your grammar knowledge",
             icon: Icons.quiz,
             color: Colors.orange,
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuizScreen()),
+              );
+            },
           ),
           const SizedBox(height: 12),
           _buildActivityItem(
@@ -40,20 +46,20 @@ class ActivitiesScreen extends StatelessWidget {
             onTap: () {},
           ),
           const SizedBox(height: 12),
-          _buildActivityItem(
-            context,
-            bgColor: const Color.fromARGB(
-              255,
-              230,
-              207,
-              235,
-            ).withValues(alpha: 9.0),
-            title: "Vocabulary Builder",
-            subtitle: "Learn new words daily",
-            icon: Icons.book,
-            color: Colors.purple,
-            onTap: () {},
-          ),
+          // _buildActivityItem(
+          //   context,
+          //   bgColor: const Color.fromARGB(
+          //     255,
+          //     230,
+          //     207,
+          //     235,
+          //   ).withValues(alpha: 9.0),
+          //   title: "Vocabulary Builder",
+          //   subtitle: "Learn new words daily",
+          //   icon: Icons.book,
+          //   color: Colors.purple,
+          //   onTap: () {},
+          // ),
         ],
       ),
     );
@@ -74,11 +80,7 @@ class ActivitiesScreen extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Starting $title...")));
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
