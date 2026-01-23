@@ -80,16 +80,20 @@ class GrammarScreen extends StatelessWidget {
     );
   }
 
+// 0xFF1E2A38
   Widget _buildExampleCard(
     BuildContext context, {
     required String correct,
     required String incorrect,
   }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? const Color.fromARGB(255, 63, 64, 65) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey.shade600 : Colors.grey.shade200,
+        ),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -101,15 +105,19 @@ class GrammarScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   correct,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
+                    color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
               ),
             ],
           ),
-          const Divider(height: 16),
+          Divider(
+            height: 16, 
+            color: (isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200)
+          ),
           Row(
             children: [
               const Icon(Icons.cancel, color: Colors.red, size: 20),
