@@ -125,20 +125,23 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: _messages.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Text(
                           "Start Practicing!",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 87, 87, 87),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white70
+                                : const Color.fromARGB(255, 87, 87, 87),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: 300,
                           child: Text(
@@ -147,7 +150,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w400,
-                              color: Color.fromARGB(255, 87, 87, 87),
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white60
+                                  : const Color.fromARGB(255, 87, 87, 87),
                             ),
                           ),
                         ),
@@ -228,7 +235,9 @@ class _ChatScreenState extends State<ChatScreen> {
               child: IconButton(
                 icon: Icon(
                   _isComposing ? Icons.send : Icons.mic,
-                  color: _isComposing ? Colors.black : Colors.grey,
+                  color: _isComposing
+                      ? (isDarkMode ? Colors.white : Colors.black)
+                      : Colors.grey,
                 ),
                 onPressed: _isComposing
                     ? () => _handleSubmitted(_textController.text)
