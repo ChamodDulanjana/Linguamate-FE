@@ -70,7 +70,7 @@ class ActivitiesScreen extends StatelessWidget {
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Card(
-      color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      color: isDarkMode ? const Color.fromARGB(255, 54, 54, 54) : Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
