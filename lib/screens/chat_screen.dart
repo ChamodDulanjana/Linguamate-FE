@@ -3,6 +3,7 @@ import '../models/chat_message.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
 import '../widgets/menu_drawer.dart';
+import '../services/chat_api_service.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -16,7 +17,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isComposing = false;
-  bool _isTyping = false; // Bot typing indicator state
+  bool _isTyping = false; // AI typing indicator state
 
   @override
   void dispose() {
@@ -44,8 +45,12 @@ class _ChatScreenState extends State<ChatScreen> {
   //   _messages.add(ChatMessage(text: "What can I help with?", isUser: false));
   // }
 
-  void _handleSubmitted(String text) {
+  // Send message
+  void _handleSubmitted(String text) async {
+    print("Sending message to backend: $text");
+
     _textController.clear();
+
     setState(() {
       _isComposing = false;
       _messages.add(ChatMessage(text: text, isUser: true));
@@ -53,23 +58,29 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _scrollToBottom();
 
-    // Mock AI Response
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isTyping = false;
-          _messages.add(
-            ChatMessage(
-              text:
-                  "Here is the corrected version of your sentence. I noticed a small grammar issue.",
-              isUser: false,
-              hasActionButtons: true,
-            ),
-          );
-        });
-        _scrollToBottom();
-      }
-    });
+    // Retrieve AI response
+    try {
+      final data = await ChatApiService.sendMessage(text);
+
+      setState(() {
+        _messages.add(
+          ChatMessage(
+            text: data["response"],
+            isUser: false,
+            hasActionButtons: data["hasActionButtons"],
+          ),
+        );
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: "Sorry 😔 I couldn't respond right now.",
+          isUser: false,
+        )); 
+      });
+    } finally {
+      setState(() => _isTyping = false);
+    }
   }
 
   void _showLoginSheet() {
@@ -161,7 +172,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       ],
                     ),
                   )
-                : ListView.builder(
+                : 
+                  ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
                     itemCount: _messages.length + (_isTyping ? 1 : 0),
@@ -192,6 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Input field / Text composer
   Widget _buildTextComposer() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return IconTheme(
