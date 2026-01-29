@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatApiService {
-  // Use 10.0.2.2 for Android Emulator
-  // Use your PC IP for real phone (e.g. 192.168.1.54)
-  static const String baseUrl = "http://10.0.2.2:8000";
+  static String get baseUrl => dotenv.env['API_URL'] ?? '';
 
   static Future<Map<String, dynamic>> sendMessage(String message) async {
     final url = Uri.parse('$baseUrl/grammar-correct');
