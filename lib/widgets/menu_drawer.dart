@@ -281,13 +281,13 @@ class MenuDrawer extends StatelessWidget {
   }
 
   final List<ChatHistory> chatHistories = [
-    ChatHistory(title: 'Machine building assistance', isPinned: true),
-    ChatHistory(title: 'Animated Logo Request'),
-    ChatHistory(title: 'Arduino Expert Assistance'),
-    ChatHistory(title: 'LINGUAMATE AI Flutter Dev'),
-    ChatHistory(title: 'Blue Penguin Mascot Design'),
-    ChatHistory(title: 'AI App Design Guide'),
-    ChatHistory(title: 'Logo for AI App'),
-    ChatHistory(title: 'Cryptography Exam Notes', isPinned: false),
+    ChatHistory(title: 'Sample Chat 1', isPinned: true),
+    ChatHistory(title: 'Sample Chat 2'),
+    ChatHistory(title: 'Sample Chat 3'),
+    ChatHistory(title: 'Sample Chat 4'),
+    ChatHistory(title: 'Sample Chat 5'),
+    ChatHistory(title: 'Sample Chat 6'),
+    ChatHistory(title: 'Sample Chat 7'),
+    ChatHistory(title: 'Sample Chat 8'),
   ];
 }
