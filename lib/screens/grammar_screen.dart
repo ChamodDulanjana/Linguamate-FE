@@ -1,56 +1,63 @@
 import 'package:flutter/material.dart';
 import '../models/grammar_data.dart';
+import '../services/grammar_api_service.dart';
 
-class GrammarScreen extends StatelessWidget {
+class GrammarScreen extends StatefulWidget {
   const GrammarScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dummy data simulating multiple rules
-    final List<GrammarRule> grammarRules = [
-      GrammarRule(
-        title: "Subject-Verb Agreement",
-        description:
-            "In English grammar, the subject and verb must agree in number. This means both must be singular or both must be plural.",
-        examples: [
-          GrammarExample(
-            correct: "She runs every day.",
-            incorrect: "She run every day.",
-          ),
-          GrammarExample(
-            correct: "They are playing football.",
-            incorrect: "They is playing football.",
-          ),
-        ],
-      ),
-      GrammarRule(
-        title: "Articles (A, An, The)",
-        description:
-            "Articles are used to define a noun as specific or unspecific. 'The' is the definite article, while 'a' and 'an' are indefinite articles.",
-        examples: [
-          GrammarExample(
-            correct: "I saw an elephant.",
-            incorrect: "I saw a elephant.",
-          ),
-          GrammarExample(
-            correct: "The book on the table is mine.",
-            incorrect: "Book on the table is mine.",
-          ),
-        ],
-      ),
-    ];
+  State<GrammarScreen> createState() => _GrammarScreenState();
+}
 
+class _GrammarScreenState extends State<GrammarScreen> {
+  late Future<List<GrammarRule>> _grammarRulesFuture;
+  List<String>? _learningConcepts;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is List<String>) {
+      _learningConcepts = args;
+      _grammarRulesFuture = GrammarApiService.fetchGrammarExplanations(
+        _learningConcepts!,
+      );
+    } else {
+      // Handle case where no arguments are passed (e.g. direct navigation or empty)
+      // For now, we can just return an empty list or fetch default rules.
+      // But based on the flow, it should come from chat.
+      _grammarRulesFuture = Future.value([]);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Grammar Rules'),
         surfaceTintColor: Colors.transparent,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: grammarRules.length,
-        itemBuilder: (context, index) {
-          final rule = grammarRules[index];
-          return _buildRuleItem(context, rule);
+      body: FutureBuilder<List<GrammarRule>>(
+        future: _grammarRulesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No grammar rules found.'));
+          }
+
+          final grammarRules = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: grammarRules.length,
+            itemBuilder: (context, index) {
+              final rule = grammarRules[index];
+              return _buildRuleItem(context, rule);
+            },
+          );
         },
       ),
     );
