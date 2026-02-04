@@ -15,7 +15,14 @@ class ChatApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decodedResponse = jsonDecode(response.body);
+      return {
+        "response": decodedResponse["response"],
+        "hasActionButtons": decodedResponse["hasActionButtons"] ?? false,
+        "learningConcepts": decodedResponse["learningConcepts"] != null
+            ? List<String>.from(decodedResponse["learningConcepts"])
+            : null,
+      };
     } else {
       throw Exception("Failed to get response from server");
     }

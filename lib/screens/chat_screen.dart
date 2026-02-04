@@ -68,15 +68,18 @@ class _ChatScreenState extends State<ChatScreen> {
             text: data["response"],
             isUser: false,
             hasActionButtons: data["hasActionButtons"],
+            learningConcepts: data["learningConcepts"],
           ),
         );
       });
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(
-          text: "Sorry 😔 I couldn't respond right now.",
-          isUser: false,
-        )); 
+        _messages.add(
+          ChatMessage(
+            text: "Sorry 😔 I couldn't respond right now.",
+            isUser: false,
+          ),
+        );
       });
     } finally {
       setState(() => _isTyping = false);
