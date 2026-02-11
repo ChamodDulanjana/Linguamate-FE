@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/splash_screen.dart';
 import 'screens/chat_screen.dart';
-import 'screens/grammar_screen.dart';
+import 'screens/learning_screen.dart';
 import 'screens/activities_screen.dart';
 
 import 'utils/theme_manager.dart';
@@ -67,7 +67,7 @@ class LinguaMateApp extends StatelessWidget {
           routes: {
             '/': (context) => const SplashScreen(),
             '/home': (context) => const ChatScreen(),
-            '/grammar': (context) => const GrammarScreen(),
+            '/learning': (context) => const LearningScreen(),
             '/activities': (context) => const ActivitiesScreen(),
           },
         );

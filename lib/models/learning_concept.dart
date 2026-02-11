@@ -1,33 +1,33 @@
-class GrammarRule {
+class LearningConcept {
   final String title;
   final String description;
-  final List<GrammarExample> examples;
+  final List<LearningConceptExample> examples;
 
-  GrammarRule({
+  LearningConcept({
     required this.title,
     required this.description,
     required this.examples,
   });
 
-  factory GrammarRule.fromJson(Map<String, dynamic> json) {
-    return GrammarRule(
+  factory LearningConcept.fromJson(Map<String, dynamic> json) {
+    return LearningConcept(
       title: json['learningConcept'] as String,
       description: json['learningConceptExplanation'] as String,
       examples: (json['learningConceptExamples'] as List)
-          .map((e) => GrammarExample.fromJson(e))
+          .map((e) => LearningConceptExample.fromJson(e))
           .toList(),
     );
   }
 }
 
-class GrammarExample {
+class LearningConceptExample {
   final String correct;
   final String incorrect;
 
-  GrammarExample({required this.correct, required this.incorrect});
+  LearningConceptExample({required this.correct, required this.incorrect});
 
-  factory GrammarExample.fromJson(Map<String, dynamic> json) {
-    return GrammarExample(
+  factory LearningConceptExample.fromJson(Map<String, dynamic> json) {
+    return LearningConceptExample(
       correct: json['correct'] as String,
       incorrect: json['incorrect'] as String,
     );

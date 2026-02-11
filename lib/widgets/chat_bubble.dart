@@ -70,7 +70,7 @@ class ChatBubble extends StatelessWidget {
                     onTap: () {
                       Navigator.pushNamed(
                         context,
-                        '/grammar',
+                        '/learning',
                         arguments: {
                           'concepts': message.learningConcepts,
                           'language': message.language,

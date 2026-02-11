@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/grammar_data.dart';
-import '../services/grammar_api_service.dart';
+import '../models/learning_concept.dart';
+import '../services/learning_concept_api_service.dart';
 
-class GrammarScreen extends StatefulWidget {
-  const GrammarScreen({super.key});
+class LearningScreen extends StatefulWidget {
+  const LearningScreen({super.key});
 
   @override
-  State<GrammarScreen> createState() => _GrammarScreenState();
+  State<LearningScreen> createState() => _LearningScreenState();
 }
 
-class _GrammarScreenState extends State<GrammarScreen> {
-  late Future<List<GrammarRule>> _grammarRulesFuture;
+class _LearningScreenState extends State<LearningScreen> {
+  late Future<List<LearningConcept>> _learningConceptsFuture;
   late List<String> _learningConcepts;
   late String language;
 
@@ -28,9 +28,9 @@ class _GrammarScreenState extends State<GrammarScreen> {
 
     // Fetch grammar rules from server
     if (_learningConcepts.isEmpty) {
-      _grammarRulesFuture = Future.value([]);
+      _learningConceptsFuture = Future.value([]);
     } else {
-      _grammarRulesFuture = GrammarApiService.fetchGrammarExplanations(
+      _learningConceptsFuture = LearningConceptApiService.fetchLearningConceptsExplanations(
           _learningConcepts,
           language,
         );
@@ -44,8 +44,8 @@ class _GrammarScreenState extends State<GrammarScreen> {
         title: const Text('Learning Concepts'),
         surfaceTintColor: Colors.transparent,
       ),
-      body: FutureBuilder<List<GrammarRule>>(
-        future: _grammarRulesFuture,
+      body: FutureBuilder<List<LearningConcept>>(
+        future: _learningConceptsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -55,14 +55,14 @@ class _GrammarScreenState extends State<GrammarScreen> {
             return const Center(child: Text('No grammar rules found.'));
           }
 
-          final grammarRules = snapshot.data!;
+          final learningConcepts = snapshot.data!;
 
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
-            itemCount: grammarRules.length,
+            itemCount: learningConcepts.length,
             itemBuilder: (context, index) {
-              final rule = grammarRules[index];
-              return _buildRuleItem(context, rule);
+              final learningConcept = learningConcepts[index];
+              return _buildRuleItem(context, learningConcept);
             },
           );
         },
@@ -70,7 +70,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
     );
   }
 
-  Widget _buildRuleItem(BuildContext context, GrammarRule rule) {
+  Widget _buildRuleItem(BuildContext context, LearningConcept learningConcept) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +94,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        rule.title,
+                        learningConcept.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -104,7 +104,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  rule.description,
+                  learningConcept.description,
                   style: const TextStyle(fontSize: 16, height: 1.5),
                 ),
               ],
@@ -121,7 +121,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...rule.examples.map((example) => _buildExampleCard(context, example)),
+        ...learningConcept.examples.map((example) => _buildExampleCard(context, example)),
         const SizedBox(height: 32),
         const SizedBox(height: 16),
         const SizedBox(height: 16),
@@ -129,7 +129,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
     );
   }
 
-  Widget _buildExampleCard(BuildContext context, GrammarExample example) {
+  Widget _buildExampleCard(BuildContext context, LearningConceptExample example) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
