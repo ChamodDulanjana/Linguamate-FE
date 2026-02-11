@@ -4,6 +4,7 @@ class ChatMessage {
   final bool hasActionButtons; // If true, show "Learn" and "Activities"
   final String? originalText; // For grammar correction visualization if needed
   final List<String>? learningConcepts;
+  final String language;
 
   ChatMessage({
     required this.text,
@@ -11,5 +12,6 @@ class ChatMessage {
     this.hasActionButtons = false,
     this.originalText,
     this.learningConcepts,
+    this.language = "en",
   });
 }

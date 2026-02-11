@@ -71,7 +71,10 @@ class ChatBubble extends StatelessWidget {
                       Navigator.pushNamed(
                         context,
                         '/grammar',
-                        arguments: message.learningConcepts,
+                        arguments: {
+                          'concepts': message.learningConcepts,
+                          'language': message.language,
+                        },
                       );
                     },
                   ),

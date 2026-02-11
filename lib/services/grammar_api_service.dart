@@ -7,14 +7,17 @@ class GrammarApiService {
   static String get baseUrl => dotenv.env['API_URL'] ?? '';
 
   static Future<List<GrammarRule>> fetchGrammarExplanations(
-    List<String> concepts,
+    List<String> concepts, String language
   ) async {
     final url = Uri.parse('$baseUrl/grammar-explain');
 
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"learningConcepts": concepts}),
+      body: jsonEncode({
+        "learningConcepts": concepts,
+        "language": language,
+      }),
     );
 
     if (response.statusCode == 200) {

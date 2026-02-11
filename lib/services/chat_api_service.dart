@@ -18,6 +18,7 @@ class ChatApiService {
       final decodedResponse = jsonDecode(response.body);
       return {
         "response": decodedResponse["response"],
+        "language": decodedResponse["language"],
         "hasActionButtons": decodedResponse["hasActionButtons"] ?? false,
         "learningConcepts": decodedResponse["learningConcepts"] != null
             ? List<String>.from(decodedResponse["learningConcepts"])

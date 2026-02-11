@@ -11,22 +11,29 @@ class GrammarScreen extends StatefulWidget {
 
 class _GrammarScreenState extends State<GrammarScreen> {
   late Future<List<GrammarRule>> _grammarRulesFuture;
-  List<String>? _learningConcepts;
+  late List<String> _learningConcepts;
+  late String language;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is List<String>) {
-      _learningConcepts = args;
-      _grammarRulesFuture = GrammarApiService.fetchGrammarExplanations(
-        _learningConcepts!,
-      );
-    } else {
-      // Handle case where no arguments are passed (e.g. direct navigation or empty)
-      // For now, we can just return an empty list or fetch default rules.
-      // But based on the flow, it should come from chat.
+
+    if (args is Map<String, dynamic>) {
+      if (args['concepts'] != null) {
+        _learningConcepts = (args['concepts'] as List<dynamic>).cast<String>();
+      }
+      language = args['language'] as String;
+    }
+
+    // Fetch grammar rules from server
+    if (_learningConcepts.isEmpty) {
       _grammarRulesFuture = Future.value([]);
+    } else {
+      _grammarRulesFuture = GrammarApiService.fetchGrammarExplanations(
+          _learningConcepts,
+          language,
+        );
     }
   }
 
@@ -34,7 +41,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grammar Rules'),
+        title: const Text('Learning Concepts'),
         surfaceTintColor: Colors.transparent,
       ),
       body: FutureBuilder<List<GrammarRule>>(

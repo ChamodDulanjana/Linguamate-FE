@@ -69,6 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
             isUser: false,
             hasActionButtons: data["hasActionButtons"],
             learningConcepts: data["learningConcepts"],
+            language: data["language"],
           ),
         );
       });
