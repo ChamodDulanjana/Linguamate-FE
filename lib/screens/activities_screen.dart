@@ -8,75 +8,71 @@ class ActivitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activities = [
+      {
+        'title': 'Quizzes',
+        'subtitle': 'Test your grammar knowledge',
+        'icon': Icons.quiz,
+        'color': Colors.orange,
+        'bgColor': const Color.fromARGB(255, 252, 236, 213),
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const QuizScreen()),
+          );
+        },
+      },
+      {
+        'title': 'Fill in the Blanks',
+        'subtitle': 'Complete the sentences',
+        'icon': Icons.edit_note,
+        'color': Colors.blue,
+        'bgColor': const Color.fromARGB(255, 214, 237, 255),
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FillInBlanksScreen()),
+          );
+        },
+      },
+      {
+        'title': 'Speaking Practice',
+        'subtitle': 'Improve your pronunciation',
+        'icon': Icons.mic,
+        'color': Colors.green,
+        'bgColor': const Color.fromARGB(255, 206, 235, 208),
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SpeakingPracticeScreen(),
+            ),
+          );
+        },
+      },
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Activities')),
-      body: ListView(
+      appBar: AppBar(
+        title: const Text('Activities'),
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: ListView.separated(
         padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildActivityItem(
+        itemCount: activities.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          return _buildActivityItem(
             context,
-            bgColor: const Color.fromARGB(255, 252, 236, 213),
-            title: "Quizzes",
-            subtitle: "Test your grammar knowledge",
-            icon: Icons.quiz,
-            color: Colors.orange,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QuizScreen()),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildActivityItem(
-            context,
-            bgColor: const Color.fromARGB(255, 214, 237, 255),
-            title: "Fill in the Blanks",
-            subtitle: "Complete the sentences",
-            icon: Icons.edit_note,
-            color: Colors.blue,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const FillInBlanksScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildActivityItem(
-            context,
-            bgColor: const Color.fromARGB(255, 206, 235, 208),
-            title: "Speaking Practice",
-            subtitle: "Improve your pronunciation",
-            icon: Icons.mic,
-            color: Colors.green,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SpeakingPracticeScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          // _buildActivityItem(
-          //   context,
-          //   bgColor: const Color.fromARGB(
-          //     255,
-          //     230,
-          //     207,
-          //     235,
-          //   ).withValues(alpha: 9.0),
-          //   title: "Vocabulary Builder",
-          //   subtitle: "Learn new words daily",
-          //   icon: Icons.book,
-          //   color: Colors.purple,
-          //   onTap: () {},
-          // ),
-        ],
+            title: activity['title'] as String,
+            subtitle: activity['subtitle'] as String,
+            icon: activity['icon'] as IconData,
+            color: activity['color'] as Color,
+            bgColor: activity['bgColor'] as Color,
+            onTap: activity['onTap'] as VoidCallback,
+          );
+        },
       ),
     );
   }
