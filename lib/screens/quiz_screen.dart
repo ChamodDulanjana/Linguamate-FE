@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
+import '../services/activity_api_service.dart';
+import '../models/quiz.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final List<String> learningConcepts;
+  final String language;
+
+  const QuizScreen({
+    super.key,
+    required this.learningConcepts,
+    required this.language,
+  });
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
-}
-
-class QuizQuestion {
-  final String question;
-  final List<String> options;
-  final int correctOptionIndex;
-
-  QuizQuestion({
-    required this.question,
-    required this.options,
-    required this.correctOptionIndex,
-  });
 }
 
 class _QuizScreenState extends State<QuizScreen> {
@@ -24,39 +21,43 @@ class _QuizScreenState extends State<QuizScreen> {
   int _score = 0;
   int? _selectedOptionIndex;
   bool _isAnswerChecked = false;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Quiz> _questions = [];
 
-  final List<QuizQuestion> _questions = [
-    QuizQuestion(
-      question: "Choose the correct sentence:",
-      options: [
-        "She don't like apples.",
-        "She doesn't like apples.",
-        "She not like apples.",
-        "She no like apples.",
-      ],
-      correctOptionIndex: 1,
-    ),
-    QuizQuestion(
-      question: "Which word is a noun?",
-      options: ["Run", "Quickly", "Happiness", "Blue"],
-      correctOptionIndex: 2,
-    ),
-    QuizQuestion(
-      question: "Past tense of 'Run':",
-      options: ["Runned", "Ran", "Running", "Rans"],
-      correctOptionIndex: 1,
-    ),
-    QuizQuestion(
-      question: "Identify the adjective:",
-      options: ["The", "Cat", "Sleeps", "Lazy"],
-      correctOptionIndex: 3,
-    ),
-    QuizQuestion(
-      question: "Plural of 'Child':",
-      options: ["Childs", "Children", "Childrens", "Childes"],
-      correctOptionIndex: 1,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchQuizData();
+  }
+
+  //fetch quiz data from API
+  Future<void> _fetchQuizData() async {
+    try {
+      final response = await ActivityApiService.generateActivity(
+        widget.learningConcepts,
+        "QUIZ",
+        widget.language,
+      );
+
+      if (mounted) {
+        setState(() {
+          final questionsData = response['questions'] as List;
+          _questions = questionsData
+              .map((q) => Quiz.fromJson(q))
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _handleOptionSelect(int index) {
     if (_isAnswerChecked) return;
@@ -159,8 +160,62 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final question = _questions[_currentQuestionIndex];
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Quiz")),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Quiz")),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  "Error loading quiz",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _errorMessage = null;
+                    });
+                    _fetchQuizData();
+                  },
+                  child: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Quiz")),
+        body: const Center(child: Text("No questions available.")),
+      );
+    }
+
+    final question = _questions[_currentQuestionIndex];
 
     return Scaffold(
       appBar: AppBar(

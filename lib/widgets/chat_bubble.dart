@@ -84,7 +84,14 @@ class ChatBubble extends StatelessWidget {
                         .fitness_center_outlined, // 'Activity' icon equivalent
                     color: Colors.orange,
                     onTap: () {
-                      Navigator.pushNamed(context, '/activities');
+                      Navigator.pushNamed(
+                        context,
+                        '/activities',
+                        arguments: {
+                          'concepts': message.learningConcepts,
+                          'language': message.language,
+                        },
+                      );
                     },
                   ),
                 ],

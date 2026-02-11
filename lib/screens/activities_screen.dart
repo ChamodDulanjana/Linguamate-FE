@@ -8,6 +8,10 @@ class ActivitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final learningConcepts = args?['concepts'] as List<String>;
+    final language = args?['language'] as String;
+
     final activities = [
       {
         'title': 'Quizzes',
@@ -18,7 +22,12 @@ class ActivitiesScreen extends StatelessWidget {
         'onTap': () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const QuizScreen()),
+            MaterialPageRoute(
+              builder: (context) => QuizScreen(
+                learningConcepts: learningConcepts,
+                language: language,
+              ),
+            ),
           );
         },
       },
