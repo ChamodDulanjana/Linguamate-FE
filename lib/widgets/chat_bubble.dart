@@ -45,16 +45,20 @@ class ChatBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: message.isUser
-                    ? (isDarkMode
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.onPrimary)
-                    : Theme.of(context).colorScheme.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
+            Text.rich(
+              TextSpan(
+                children: _parseMessage(
+                  message.text,
+                  TextStyle(
+                    color: message.isUser
+                        ? (isDarkMode
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onPrimary)
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ),
             ),
             if (message.hasActionButtons) ...[
@@ -101,6 +105,44 @@ class ChatBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  //parse message to bold text / Bold the corrected sentence
+  List<InlineSpan> _parseMessage(String text, TextStyle baseStyle) {
+    final List<InlineSpan> spans = [];
+    // Regex to capture text between ** ... **
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*', dotAll: true);
+
+    int lastIndex = 0;
+
+    for (final Match match in boldRegex.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastIndex) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastIndex, match.start),
+            style: baseStyle,
+          ),
+        );
+      }
+
+      // Add the bold text
+      spans.add(
+        TextSpan(
+          text: match.group(1), // group 1 is the content inside **
+          style: baseStyle.copyWith(fontWeight: FontWeight.bold),
+        ),
+      );
+
+      lastIndex = match.end;
+    }
+
+    // Add any remaining text
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(text: text.substring(lastIndex), style: baseStyle));
+    }
+
+    return spans;
   }
 }
 
