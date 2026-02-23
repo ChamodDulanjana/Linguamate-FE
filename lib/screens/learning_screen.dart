@@ -41,34 +41,43 @@ class _LearningScreenState extends State<LearningScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Learning Concepts'),
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: FutureBuilder<List<LearningConcept>>(
-        future: _learningConceptsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget(type: LoadingType.learning);
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No grammar rules found.'));
-          }
+    return FutureBuilder<List<LearningConcept>>(
+      future: _learningConceptsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: LoadingWidget(type: LoadingType.learning),
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Learning Concepts')),
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Learning Concepts')),
+            body: const Center(child: Text('No grammar rules found.')),
+          );
+        }
 
-          final learningConcepts = snapshot.data!;
+        final learningConcepts = snapshot.data!;
 
-          return ListView.builder(
+        // load learning concepts
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Learning Concepts'),
+            surfaceTintColor: Colors.transparent,
+          ),
+          body: ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: learningConcepts.length,
             itemBuilder: (context, index) {
               final learningConcept = learningConcepts[index];
               return _buildRuleItem(context, learningConcept);
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
