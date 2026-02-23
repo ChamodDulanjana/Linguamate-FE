@@ -74,7 +74,6 @@ class _LoadingWidgetState extends State<LoadingWidget>
           "Just a moment...",
         ];
       case LoadingType.general:
-      default:
         return [
           "Loading...",
           "Please wait...",
