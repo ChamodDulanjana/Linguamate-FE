@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo.png', width: 150, height: 150),
+            Image.asset('assets/images/logo.png', width: 120, height: 120),
             const SizedBox(height: 40),
             Text(
               'LINGUAMATE',
