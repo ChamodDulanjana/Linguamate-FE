@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/activity_api_service.dart';
 import '../models/quiz.dart';
+import '../widgets/loading_widget.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<String> learningConcepts;
@@ -43,9 +44,7 @@ class _QuizScreenState extends State<QuizScreen> {
       if (mounted) {
         setState(() {
           final questionsData = response['questions'] as List;
-          _questions = questionsData
-              .map((q) => Quiz.fromJson(q))
-              .toList();
+          _questions = questionsData.map((q) => Quiz.fromJson(q)).toList();
           _isLoading = false;
         });
       }
@@ -163,9 +162,8 @@ class _QuizScreenState extends State<QuizScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Quiz")),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: LoadingWidget(type: LoadingType.quiz),
       );
     }
 
