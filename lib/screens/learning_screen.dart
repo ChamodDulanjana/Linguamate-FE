@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/learning_concept.dart';
 import '../services/learning_concept_api_service.dart';
+import '../widgets/loading_widget.dart';
 
 class LearningScreen extends StatefulWidget {
   const LearningScreen({super.key});
@@ -30,10 +31,11 @@ class _LearningScreenState extends State<LearningScreen> {
     if (_learningConcepts.isEmpty) {
       _learningConceptsFuture = Future.value([]);
     } else {
-      _learningConceptsFuture = LearningConceptApiService.fetchLearningConceptsExplanations(
-          _learningConcepts,
-          language,
-        );
+      _learningConceptsFuture =
+          LearningConceptApiService.fetchLearningConceptsExplanations(
+            _learningConcepts,
+            language,
+          );
     }
   }
 
@@ -48,7 +50,7 @@ class _LearningScreenState extends State<LearningScreen> {
         future: _learningConceptsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingWidget(type: LoadingType.learning);
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -121,7 +123,9 @@ class _LearningScreenState extends State<LearningScreen> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...learningConcept.examples.map((example) => _buildExampleCard(context, example)),
+        ...learningConcept.examples.map(
+          (example) => _buildExampleCard(context, example),
+        ),
         const SizedBox(height: 32),
         const SizedBox(height: 16),
         const SizedBox(height: 16),
@@ -129,7 +133,10 @@ class _LearningScreenState extends State<LearningScreen> {
     );
   }
 
-  Widget _buildExampleCard(BuildContext context, LearningConceptExample example) {
+  Widget _buildExampleCard(
+    BuildContext context,
+    LearningConceptExample example,
+  ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
