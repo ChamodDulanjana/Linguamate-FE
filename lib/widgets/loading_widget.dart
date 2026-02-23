@@ -63,7 +63,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
         return [
           "Creating context sentences...",
           "Hiding the keywords...",
-          "Preparing the puzzle...",
+          "Formulating possible answers...",
           "Almost ready...",
         ];
       case LoadingType.speaking:
