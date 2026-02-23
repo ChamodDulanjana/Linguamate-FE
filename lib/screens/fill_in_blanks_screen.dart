@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
+import '../models/fill_in_the_blanks.dart';
+import '../services/activity_api_service.dart';
+import '../widgets/loading_widget.dart';
 
 class FillInBlanksScreen extends StatefulWidget {
-  const FillInBlanksScreen({super.key});
+  final List<String> learningConcepts;
+  final String language;
+
+  const FillInBlanksScreen({
+    super.key,
+    required this.learningConcepts,
+    required this.language,
+  });
 
   @override
   State<FillInBlanksScreen> createState() => _FillInBlanksScreenState();
-}
-
-class BlanksQuestion {
-  final String sentencePart1;
-  final String sentencePart2;
-  final List<String> options;
-  final int correctOptionIndex;
-
-  BlanksQuestion({
-    required this.sentencePart1,
-    required this.sentencePart2,
-    required this.options,
-    required this.correctOptionIndex,
-  });
 }
 
 class _FillInBlanksScreenState extends State<FillInBlanksScreen> {
@@ -27,38 +23,42 @@ class _FillInBlanksScreenState extends State<FillInBlanksScreen> {
   int? _selectedOptionIndex;
   bool _isAnswerChecked = false;
 
-  final List<BlanksQuestion> _questions = [
-    BlanksQuestion(
-      sentencePart1: "The cat is ",
-      sentencePart2: " on the mat.",
-      options: ["sleeping", "slept", "sleeps", "sleep"],
-      correctOptionIndex: 0,
-    ),
-    BlanksQuestion(
-      sentencePart1: "She ",
-      sentencePart2: " to the market yesterday.",
-      options: ["go", "gone", "went", "going"],
-      correctOptionIndex: 2,
-    ),
-    BlanksQuestion(
-      sentencePart1: "We have ",
-      sentencePart2: " our homework.",
-      options: ["finish", "finished", "finishing", "finishes"],
-      correctOptionIndex: 1,
-    ),
-    BlanksQuestion(
-      sentencePart1: "He is ",
-      sentencePart2: " than his brother.",
-      options: ["biger", "biggest", "bigger", "more big"],
-      correctOptionIndex: 2,
-    ),
-    BlanksQuestion(
-      sentencePart1: "They ",
-      sentencePart2: " playing football now.",
-      options: ["is", "am", "are", "be"],
-      correctOptionIndex: 2,
-    ),
-  ];
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<FillInTheBlanks> _questions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final response = await ActivityApiService.generateActivity(
+        widget.learningConcepts,
+        "FILL_IN_THE_BLANKS",
+        widget.language,
+      );
+
+      if (mounted) {
+        setState(() {
+          final questionsData = response['questions'] as List;
+          _questions = questionsData
+              .map((q) => FillInTheBlanks.fromJson(q))
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _handleOptionSelect(int index) {
     if (_isAnswerChecked) return;
@@ -161,6 +161,58 @@ class _FillInBlanksScreenState extends State<FillInBlanksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: LoadingWidget(type: LoadingType.fillInTheBlanks),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Fill in the Blanks")),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  "Error loading activity",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _errorMessage = null;
+                    });
+                    _fetchData();
+                  },
+                  child: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Fill in the Blanks")),
+        body: const Center(child: Text("No questions available.")),
+      );
+    }
+
     final question = _questions[_currentQuestionIndex];
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 

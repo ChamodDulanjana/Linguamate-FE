@@ -40,7 +40,12 @@ class ActivitiesScreen extends StatelessWidget {
         'onTap': () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const FillInBlanksScreen()),
+            MaterialPageRoute(
+              builder: (context) => FillInBlanksScreen(
+                learningConcepts: learningConcepts,
+                language: language,
+              ),
+            ),
           );
         },
       },
