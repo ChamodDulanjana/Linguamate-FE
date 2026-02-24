@@ -27,6 +27,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   bool _isListening = false;
   bool _showFeedback = false;
   bool _isCorrect = false;
+  List<dynamic> _heatmap = [];
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -35,6 +36,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   bool _isLoading = true;
   String _errorMessage = '';
   bool _isEvaluating = false;
+  String _feedbackText = '';
 
   @override
   void initState() {
@@ -153,11 +155,15 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
       );
 
       final bool isCorrect = response['isCorrect'] ?? false;
+      final List<dynamic> heatmap = response['heatmap'] ?? [];
+      final String feedbackText = response['feedback'] ?? '';
 
       setState(() {
         _isCorrect = isCorrect;
         _showFeedback = true;
         _isEvaluating = false;
+        _heatmap = heatmap;
+        _feedbackText = feedbackText;
         if (_isCorrect) _score++;
       });
     } catch (e) {
@@ -174,6 +180,8 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
         _currentSentenceIndex++;
         _showFeedback = false;
         _isCorrect = false;
+        _heatmap = [];
+        _feedbackText = '';
       });
     } else {
       _showScoreDialog();
@@ -351,26 +359,51 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                   ),
                   child: Column(
                     children: [
-                      Text(
-                        sentence.sentence,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          height: 1.4,
-                          color: isDarkMode ? Colors.white : Colors.black87,
+                      _showFeedback ?
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          children: _heatmap.map((item) {
+
+                            Color color;
+
+                            switch(item["status"]) {
+                              case "correct":
+                                color = Colors.green;
+                                break;
+                              case "incorrect":
+                                color = Colors.red;
+                                break;
+                              case "missing":
+                                color = Colors.orange;
+                                break;
+                              default:
+                                color = Colors.grey;
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                "${item["word"]} ",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
+                              ),
+                            );
+
+                          }).toList(),
+                        )
+                      : Text(
+                          sentence.sentence,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        sentence.phonetic,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -378,17 +411,19 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                 if (_showFeedback) ...[
                   Icon(
                     _isCorrect ? Icons.check_circle : Icons.error,
-                    color: _isCorrect ? Colors.green : Colors.red,
+                    color: _isCorrect ? Colors.green : Colors.orange,
                     size: 60,
                   ),
                   const SizedBox(height: 16),
+
+                  //feedback text
                   Text(
-                    _isCorrect ? "Perfect!" : "Try Again",
+                    _feedbackText,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: _isCorrect ? Colors.green : Colors.red,
+                      color: _isCorrect ? Colors.green : Colors.orange,
                     ),
                   ),
                 ] else if (_isListening) ...[
