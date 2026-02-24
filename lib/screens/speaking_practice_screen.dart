@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import '../models/speaking_practice.dart';
+import '../services/activity_api_service.dart';
+import '../widgets/loading_widget.dart';
 
 class SpeakingPracticeScreen extends StatefulWidget {
-  const SpeakingPracticeScreen({super.key});
+  final List<String> learningConcepts;
+  final String language;
+
+  const SpeakingPracticeScreen({
+    super.key,
+    required this.learningConcepts,
+    required this.language,
+  });
 
   @override
   State<SpeakingPracticeScreen> createState() => _SpeakingPracticeScreenState();
-}
-
-class SpeakingSentence {
-  final String sentence;
-  final String phonetic;
-
-  SpeakingSentence({required this.sentence, required this.phonetic});
 }
 
 class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
@@ -25,28 +28,9 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  final List<SpeakingSentence> _sentences = [
-    SpeakingSentence(
-      sentence: "The quick brown fox jumps over the lazy dog.",
-      phonetic: "/ðə kwɪk braʊn fɒks dʒʌmps ˈəʊvə ðə ˈleɪzi dɒg/",
-    ),
-    SpeakingSentence(
-      sentence: "I would like a cup of coffee.",
-      phonetic: "/aɪ wʊd laɪk ə kʌp ɒv ˈkɒfi/",
-    ),
-    SpeakingSentence(
-      sentence: "Where is the nearest train station?",
-      phonetic: "/weər ɪz ðə ˈnɪərɪst treɪn ˈsteɪʃən/",
-    ),
-    SpeakingSentence(
-      sentence: "It makes no difference to me.",
-      phonetic: "/ɪt meɪks nəʊ ˈdɪfrəns tuː miː/",
-    ),
-    SpeakingSentence(
-      sentence: "Better late than never.",
-      phonetic: "/ˈbɛtə leɪt ðæn ˈnɛvə/",
-    ),
-  ];
+  List<SpeakingPractice> _sentences = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -58,6 +42,31 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    _loadActivities();
+  }
+
+  Future<void> _loadActivities() async {
+    try {
+      final response = await ActivityApiService.generateActivity(
+        widget.learningConcepts,
+        'SPEAKING_PRACTICE',
+        widget.language,
+      );
+
+      final List<dynamic> practicesData = response['sentences'] ?? [];
+
+      setState(() {
+        _sentences = practicesData
+            .map((json) => SpeakingPractice.fromJson(json))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -180,6 +189,49 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
 
   @override
   Widget build(BuildContext context) {
+    //loading screen
+    if (_isLoading) {
+      return Scaffold(
+        body: const LoadingWidget(type: LoadingType.speaking),
+      );
+    }
+
+    if (_errorMessage.isNotEmpty || _sentences.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Speaking Practice")),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  _errorMessage.isNotEmpty
+                      ? "Oops! Something went wrong:\n$_errorMessage"
+                      : "No speaking practice sentences found.",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _errorMessage = '';
+                    });
+                    _loadActivities();
+                  },
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final sentence = _sentences[_currentSentenceIndex];
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
