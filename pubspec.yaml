@@ -39,6 +39,7 @@ dependencies:
   record: 5.2.1
   dio: 5.4.0
   path_provider: 2.1.2
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'dart:ui';
 import '../models/speaking_practice.dart';
 import '../services/activity_api_service.dart';
 import '../widgets/loading_widget.dart';
@@ -31,6 +34,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   List<SpeakingPractice> _sentences = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  bool _isEvaluating = false;
 
   @override
   void initState() {
@@ -45,6 +49,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
     _loadActivities();
   }
 
+  //load activities from server
   Future<void> _loadActivities() async {
     try {
       final response = await ActivityApiService.generateActivity(
@@ -69,34 +74,98 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
     }
   }
 
+  final _audioRecorder = AudioRecorder();
+  String? _audioPath;
+
   @override
   void dispose() {
+    _audioRecorder.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
-  void _startListening() {
-    setState(() {
-      _isListening = true;
-      _showFeedback = false;
-    });
+  Future<void> _startListening() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        setState(() {
+          _isListening = true;
+          _showFeedback = false;
+        });
 
-    // Simulate listening duration
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        _stopListening();
+        // Start recording
+        final directory = await getApplicationDocumentsDirectory();
+        _audioPath =
+            '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        await _audioRecorder.start(
+          const RecordConfig(
+            encoder: AudioEncoder.aacLc,
+            sampleRate: 44100,
+            bitRate: 128000,
+          ),
+          path: _audioPath!,
+        );
       }
-    });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error starting recording: $e')));
+      setState(() {
+        _isListening = false;
+      });
+    }
   }
 
-  void _stopListening() {
-    setState(() {
-      _isListening = false;
-      _showFeedback = true;
-      // Mock validation: 80% chance of success for demo
-      _isCorrect = true; // For demo purposes, always Correct
-      if (_isCorrect) _score++;
-    });
+  Future<void> _stopListening() async {
+    try {
+      final path = await _audioRecorder.stop();
+
+      setState(() {
+        _isListening = false;
+        _isEvaluating = true;
+      });
+
+      if (path != null) {
+        await _evaluateSpeaking(path);
+      } else {
+        setState(() {
+          _isEvaluating = false;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error stopping recording: $e')));
+      setState(() {
+        _isListening = false;
+        _isEvaluating = false;
+      });
+    }
+  }
+
+  Future<void> _evaluateSpeaking(String filePath) async {
+    try {
+      final sentence = _sentences[_currentSentenceIndex];
+      final response = await ActivityApiService.evaluateSpeaking(
+        filePath,
+        sentence.sentence,
+        widget.language,
+      );
+
+      final bool isCorrect = response['isCorrect'] ?? false;
+
+      setState(() {
+        _isCorrect = isCorrect;
+        _showFeedback = true;
+        _isEvaluating = false;
+        if (_isCorrect) _score++;
+      });
+    } catch (e) {
+      setState(() {
+        _isEvaluating = false;
+        _errorMessage = "Fail to evaluate audio: $e";
+      });
+    }
   }
 
   void _nextSentence() {
@@ -249,153 +318,177 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Read aloud:",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.grey.shade600,
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey.shade900 : Colors.green.shade50,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Read aloud:",
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white70 : Colors.grey.shade600,
+                    fontSize: 16,
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    sentence.sentence,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      height: 1.4,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.grey.shade900
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        sentence.sentence,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.4,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        sentence.phonetic,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                if (_showFeedback) ...[
+                  Icon(
+                    _isCorrect ? Icons.check_circle : Icons.error,
+                    color: _isCorrect ? Colors.green : Colors.red,
+                    size: 60,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    sentence.phonetic,
+                    _isCorrect ? "Perfect!" : "Try Again",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: _isCorrect ? Colors.green : Colors.red,
                     ),
+                  ),
+                ] else if (_isListening) ...[
+                  ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                  child: const Icon(Icons.mic, color: Colors.green, size: 40),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Listening...",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18, color: Colors.green),
+                  ),
+                ] else ...[
+                  const Icon(Icons.mic_none, color: Colors.grey, size: 60),
+                  const SizedBox(height: 16),
+                  const Text(
+                "Tap microphone to speak",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
-              ),
-            ),
-            const Spacer(),
-            if (_showFeedback) ...[
-              Icon(
-                _isCorrect ? Icons.check_circle : Icons.error,
-                color: _isCorrect ? Colors.green : Colors.red,
-                size: 60,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _isCorrect ? "Perfect!" : "Try Again",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _isCorrect ? Colors.green : Colors.red,
-                ),
-              ),
-            ] else if (_isListening) ...[
-              ScaleTransition(
-                scale: _pulseAnimation,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.mic, color: Colors.green, size: 40),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Listening...",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, color: Colors.green),
-              ),
-            ] else ...[
-              const Icon(Icons.mic_none, color: Colors.grey, size: 60),
-              const SizedBox(height: 16),
-              const Text(
-                "Tap microphone to speak",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ],
-            const Spacer(),
-            SizedBox(
-              height: 60,
-              child: _showFeedback
-                  ? ElevatedButton(
-                      onPressed: _nextSentence,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: Text(
-                        _currentSentenceIndex < _sentences.length - 1
-                            ? "Next Sentence"
-                            : "Finish",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    )
-                  : GestureDetector(
-                      onTap: _isListening ? null : _startListening,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isListening
-                              ? Colors.grey.shade300
-                              : Colors.green,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+                const Spacer(),
+                SizedBox(
+                  height: 60,
+                  child: _showFeedback
+                      ? ElevatedButton(
+                          onPressed: _nextSentence,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                          ],
+                          ),
+                          child: Text(
+                            _currentSentenceIndex < _sentences.length - 1
+                                ? "Next Sentence"
+                                : "Finish",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : GestureDetector(
+                      onTap: _isListening ? _stopListening : _startListening,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _isListening
+                                  ? Colors.grey.shade300
+                                  : Colors.green,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              _isListening ? Icons.stop : Icons.mic,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          _isListening ? Icons.stop : Icons.mic,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-            const SizedBox(height: 30),
-          ],
-        ),
+          ),
+
+          // loading widget for evaluating
+          if (_isEvaluating)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                child: Container(
+                  color: isDarkMode
+                      ? Colors.black.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.5),
+                  child: const SafeArea(
+                    child: Center(
+                      child: LoadingWidget(type: LoadingType.general),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
