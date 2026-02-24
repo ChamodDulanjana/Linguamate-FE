@@ -23,7 +23,7 @@ class SpeakingPracticeScreen extends StatefulWidget {
 class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
     with SingleTickerProviderStateMixin {
   int _currentSentenceIndex = 0;
-  int _score = 0;
+  double _cumulativeScore = 0.0;
   bool _isListening = false;
   bool _showFeedback = false;
   bool _isCorrect = false;
@@ -158,13 +158,21 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
       final List<dynamic> heatmap = response['heatmap'] ?? [];
       final String feedbackText = response['feedback'] ?? '';
 
+      // Parse score as double, defaulting to 0.0 if not found
+      final dynamic rawScore = response['score'];
+      final double pronunciationScore = rawScore != null
+          ? (rawScore is num
+                ? rawScore.toDouble()
+                : double.tryParse(rawScore.toString()) ?? 0.0)
+          : 0.0;
+
       setState(() {
         _isCorrect = isCorrect;
         _showFeedback = true;
         _isEvaluating = false;
         _heatmap = heatmap;
         _feedbackText = feedbackText;
-        if (_isCorrect) _score++;
+        _cumulativeScore += pronunciationScore;
       });
     } catch (e) {
       setState(() {
@@ -189,6 +197,11 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   }
 
   void _showScoreDialog() {
+    // Calculate average score. Since scores are e.g. 0.2, this turns it into a percentage (e.g. 0.2 * 100 = 20%)
+    final int averageScorePercent = _sentences.isEmpty
+        ? 0
+        : ((_cumulativeScore / _sentences.length) * 100).round();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -213,29 +226,22 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                   color: isDarkMode ? Colors.white : Colors.black,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
-                "You pronounced",
+                "Average Score:",
                 style: TextStyle(
-                  fontSize: 16,
-                  color: isDarkMode ? Colors.white70 : Colors.grey.shade600,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white70 : Colors.grey.shade700,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 8),  
               Text(
-                "$_score / ${_sentences.length}",
-                style: const TextStyle(
+                "$averageScorePercent%",
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "sentences correctly",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDarkMode ? Colors.white70 : Colors.grey.shade600,
                 ),
               ),
               const SizedBox(height: 24),
@@ -268,9 +274,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
   Widget build(BuildContext context) {
     //loading screen
     if (_isLoading) {
-      return Scaffold(
-        body: const LoadingWidget(type: LoadingType.speaking),
-      );
+      return Scaffold(body: const LoadingWidget(type: LoadingType.speaking));
     }
 
     if (_errorMessage.isNotEmpty || _sentences.isEmpty) {
@@ -359,51 +363,53 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                   ),
                   child: Column(
                     children: [
-                      _showFeedback ?
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          children: _heatmap.map((item) {
+                      _showFeedback
+                          ? Wrap(
+                              alignment: WrapAlignment.center,
+                              children: _heatmap.map((item) {
+                                Color color;
 
-                            Color color;
+                                switch (item["status"]) {
+                                  case "correct":
+                                    color = Colors.green;
+                                    break;
+                                  case "incorrect":
+                                    color = Colors.red;
+                                    break;
+                                  case "missing":
+                                    color = Colors.orange;
+                                    break;
+                                  default:
+                                    color = Colors.grey;
+                                }
 
-                            switch(item["status"]) {
-                              case "correct":
-                                color = Colors.green;
-                                break;
-                              case "incorrect":
-                                color = Colors.red;
-                                break;
-                              case "missing":
-                                color = Colors.orange;
-                                break;
-                              default:
-                                color = Colors.grey;
-                            }
-
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(
-                                "${item["word"]} ",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
-                                ),
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  child: Text(
+                                    "${item["word"]} ",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: color,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            )
+                          : Text(
+                              sentence.sentence,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                height: 1.4,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : Colors.black87,
                               ),
-                            );
-
-                          }).toList(),
-                        )
-                      : Text(
-                          sentence.sentence,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            height: 1.4,
-                            color: isDarkMode ? Colors.white : Colors.black87,
-                          ),
-                        ),
+                            ),
                     ],
                   ),
                 ),
@@ -436,7 +442,11 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                         color: Colors.green.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
-                  child: const Icon(Icons.mic, color: Colors.green, size: 40),
+                      child: const Icon(
+                        Icons.mic,
+                        color: Colors.green,
+                        size: 40,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -449,7 +459,7 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                   const Icon(Icons.mic_none, color: Colors.grey, size: 60),
                   const SizedBox(height: 16),
                   const Text(
-                "Tap microphone to speak",
+                    "Tap microphone to speak",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
@@ -478,7 +488,9 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                           ),
                         )
                       : GestureDetector(
-                      onTap: _isListening ? _stopListening : _startListening,
+                          onTap: _isListening
+                              ? _stopListening
+                              : _startListening,
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
