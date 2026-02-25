@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/chat_message.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
@@ -6,6 +8,9 @@ import '../widgets/menu_drawer.dart';
 import '../services/chat_api_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:just_audio/just_audio.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -13,6 +18,8 @@ class ChatScreen extends StatefulWidget {
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
+
+enum InputType { text, speech }
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
@@ -22,9 +29,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _isComposing = false;
   bool _isTyping = false; // AI typing indicator state
+  final AudioPlayer _voicePlayer = AudioPlayer();
+  InputType _input_type = InputType.text;
 
   @override
   void dispose() {
+    _voicePlayer.dispose();
     _scrollController.dispose();
     _textController.dispose();
     super.dispose();
@@ -47,8 +57,33 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
   }
 
+  Future<void> _playStreamingVoice(String text, String language) async {
+    _isTyping = false;
+    try {
+      // Stop previous speech instantly
+      await _voicePlayer.stop();
+
+      final uri = Uri.parse(
+        "${ChatApiService.baseUrl}/tts/stream"
+        "?text=${Uri.encodeComponent(text)}"
+        "&language=$language",
+      );
+      print("uri: $uri");
+
+      await _voicePlayer.setAudioSource(
+        AudioSource.uri(uri),
+      );
+
+      await _voicePlayer.play();
+    } catch (e) {
+      debugPrint("Streaming voice error: $e");
+    }
+  }
+
   void _startListening() async {
     if (!_speechEnabled) {
+      await _voicePlayer.stop();
+
       _speechEnabled = await _speechToText.initialize();
       if (!_speechEnabled) {
         if (mounted) {
@@ -104,7 +139,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Retrieve AI response
     try {
-      final data = await ChatApiService.sendMessage(text);
+      final data = await ChatApiService.sendMessage(text, _input_type);
+      print('data: $data');
 
       setState(() {
         _messages.add(
@@ -117,6 +153,16 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       });
+
+      _scrollToBottom();
+
+      // AUTO VOICE MODE
+      if (data["voiceEnabled"] == true) {
+        await _playStreamingVoice(
+          data["response"],
+          data["language"],
+        );
+      }
     } catch (e) {
       setState(() {
         _messages.add(
@@ -306,6 +352,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 onPressed: _isComposing
                     ? () => _handleSubmitted(_textController.text)
                     : () {
+                        _input_type = InputType.speech;
                         if (_speechToText.isListening) {
                           _stopListening();
                         } else {
