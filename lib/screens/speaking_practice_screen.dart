@@ -495,11 +495,13 @@ class _SpeakingPracticeScreenState extends State<SpeakingPracticeScreen>
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _isListening
-                                  ? Colors.grey.shade300
+                                  ? Colors.red
                                   : Colors.green,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.green.withOpacity(0.3),
+                                  color: _isListening
+                                      ? Colors.red.shade100
+                                      : Colors.green.shade200,
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                 ),
