@@ -4,6 +4,8 @@ import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
 import '../widgets/menu_drawer.dart';
 import '../services/chat_api_service.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -15,6 +17,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
   final List<ChatMessage> _messages = [];
   bool _isComposing = false;
   bool _isTyping = false; // AI typing indicator state
@@ -38,16 +42,56 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // specific initial message
-  //   _messages.add(ChatMessage(text: "What can I help with?", isUser: false));
-  // }
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _startListening() async {
+    if (!_speechEnabled) {
+      _speechEnabled = await _speechToText.initialize();
+      if (!_speechEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Speech recognition is not available or disabled via permissions",
+              ),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    await _speechToText.listen(onResult: _onSpeechResult);
+    setState(() {});
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _textController.text = result.recognizedWords;
+      // Move cursor to end
+      _textController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _textController.text.length),
+      );
+      _isComposing = _textController.text.isNotEmpty;
+    });
+  }
 
   // Send message
   void _handleSubmitted(String text) async {
     print("Sending message to backend: $text");
+
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+      setState(() {});
+    }
 
     _textController.clear();
 
@@ -176,8 +220,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ],
                     ),
                   )
-                : 
-                  ListView.builder(
+                : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
                     itemCount: _messages.length + (_isTyping ? 1 : 0),
@@ -224,8 +267,8 @@ class _ChatScreenState extends State<ChatScreen> {
           boxShadow: [
             BoxShadow(
               color: isDarkMode
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.grey.withOpacity(0.1),
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : Colors.grey.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -251,20 +294,23 @@ class _ChatScreenState extends State<ChatScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 4.0),
               child: IconButton(
                 icon: Icon(
-                  _isComposing ? Icons.send : Icons.mic,
+                  _isComposing
+                      ? Icons.send
+                      : (_speechToText.isListening
+                            ? Icons.mic
+                            : Icons.mic_none),
                   color: _isComposing
                       ? (isDarkMode ? Colors.white : Colors.black)
-                      : Colors.grey,
+                      : (_speechToText.isListening ? Colors.red : Colors.grey),
                 ),
                 onPressed: _isComposing
                     ? () => _handleSubmitted(_textController.text)
                     : () {
-                        // Mic logic placeholder
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Mic feature not implemented yet"),
-                          ),
-                        );
+                        if (_speechToText.isListening) {
+                          _stopListening();
+                        } else {
+                          _startListening();
+                        }
                       },
               ),
             ),
