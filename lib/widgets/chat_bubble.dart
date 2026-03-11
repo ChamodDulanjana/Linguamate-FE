@@ -20,7 +20,7 @@ class ChatBubble extends StatelessWidget {
               ? (isDarkMode
                     ? const Color.fromARGB(255, 83, 83, 83)
                     : Theme.of(context).colorScheme.primary)
-              : (isDarkMode ? const Color(0xFF2C2C2C) : Colors.white),
+              : Colors.transparent,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -31,13 +31,13 @@ class ChatBubble extends StatelessWidget {
                 ? Radius.zero
                 : const Radius.circular(16),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: Colors.black.withOpacity(0.05),
+          //     blurRadius: 5,
+          //     offset: const Offset(0, 2),
+          //   ),
+          // ],
         ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
