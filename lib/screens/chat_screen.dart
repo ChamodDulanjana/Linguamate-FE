@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/chat_message.dart';
+import '../models/input_type.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
 import '../widgets/menu_drawer.dart';
@@ -18,8 +19,6 @@ class ChatScreen extends StatefulWidget {
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
-
-enum InputType { text, speech }
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
@@ -119,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // Send message
+  // Send message to backend
   void _handleSubmitted(String text) async {
     print("Sending message to backend: $text");
 
@@ -130,6 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _textController.clear();
 
+    // Show user message
     setState(() {
       _isComposing = false;
       _messages.add(ChatMessage(text: text, isUser: true));
@@ -139,30 +139,62 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Retrieve AI response
     try {
-      final data = await ChatApiService.sendMessage(text, _input_type);
-      print('data: $data');
+      final response = await ChatApiService.sendMessage(text, _input_type);
 
-      setState(() {
-        _messages.add(
-          ChatMessage(
-            text: data["response"],
-            isUser: false,
-            hasActionButtons: data["hasActionButtons"],
-            learningConcepts: data["learningConcepts"],
-            language: data["language"],
-          ),
-        );
+      String buffer = "";
+      String responseText = "";
+      String language = "en";
+      bool hasActionButtons = false;
+      List<String> learningConcepts = [];
+      bool voiceEnabled = false;
+
+      response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+        if (line.trim().isEmpty) return;
+        final data = jsonDecode(line);
+
+        if (data["token"] != null) {
+          buffer += data["token"];
+          responseText = jsonDecode(buffer)["response"];
+
+          // Create new message
+          setState(() {
+            _isTyping = false;
+            _messages.add(ChatMessage(
+              text: responseText,
+              isUser: false,
+            ));
+          });
+
+          _scrollToBottom();
+        }
+
+        if (data["done"] == true) {
+          // Get data
+          hasActionButtons = data["hasActionButtons"] == true;
+          language = data["language"] ?? "en";
+          if (data["learningConcepts"] != null) {
+            data["learningConcepts"].forEach((element) {
+              learningConcepts.add(element.toString());
+            });
+          }
+          voiceEnabled = data["voiceEnabled"] == false;
+
+          // Update created message
+          setState(() {
+            _messages.last = _messages.last.copyWith(
+              hasActionButtons: hasActionButtons,
+              learningConcepts: learningConcepts,
+              language: language,
+            );
+          });
+
+          _scrollToBottom();
+
+          if (voiceEnabled) {
+            _playStreamingVoice(responseText, language);
+          }
+        }
       });
-
-      _scrollToBottom();
-
-      // AUTO VOICE MODE
-      if (data["voiceEnabled"] == true) {
-        await _playStreamingVoice(
-          data["response"],
-          data["language"],
-        );
-      }
     } catch (e) {
       setState(() {
         _messages.add(
@@ -173,7 +205,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       });
     } finally {
-      setState(() => _isTyping = false);
+      //setState(() => _isTyping = false);
     }
   }
 
