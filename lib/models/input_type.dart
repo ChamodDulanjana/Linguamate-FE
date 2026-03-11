@@ -1,0 +1,4 @@
+enum InputType {
+  text,
+  speech,
+}
