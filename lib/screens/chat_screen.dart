@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/chat_message.dart';
 import '../models/input_type.dart';
 import '../widgets/chat_bubble.dart';
@@ -10,7 +8,6 @@ import '../services/chat_api_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -56,29 +53,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
   }
 
-  Future<void> _playStreamingVoice(String text, String language) async {
-    _isTyping = false;
-    try {
-      // Stop previous speech instantly
-      await _voicePlayer.stop();
-
-      final uri = Uri.parse(
-        "${ChatApiService.baseUrl}/tts/stream"
-        "?text=${Uri.encodeComponent(text)}"
-        "&language=$language",
-      );
-      print("uri: $uri");
-
-      await _voicePlayer.setAudioSource(
-        AudioSource.uri(uri),
-      );
-
-      await _voicePlayer.play();
-    } catch (e) {
-      debugPrint("Streaming voice error: $e");
-    }
-  }
-
   void _startListening() async {
     if (!_speechEnabled) {
       await _voicePlayer.stop();
@@ -120,93 +94,97 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Send message to backend
   void _handleSubmitted(String text) async {
-    print("Sending message to backend: $text");
-
     if (_speechToText.isListening) {
       await _speechToText.stop();
       setState(() {});
     }
-
     _textController.clear();
 
     // Show user message
     setState(() {
+      _isTyping = true;
       _isComposing = false;
       _messages.add(ChatMessage(text: text, isUser: true));
-      _isTyping = true;
+      _messages.add(ChatMessage(text: "", isUser: false)); // placeholder AI message
     });
     _scrollToBottom();
 
     // Retrieve AI response
-    try {
-      final response = await ChatApiService.sendMessage(text, _input_type);
+    final response = await ChatApiService.sendMessage(text, _input_type);
 
-      String buffer = "";
-      String responseText = "";
-      String language = "en";
-      bool hasActionButtons = false;
-      List<String> learningConcepts = [];
-      bool voiceEnabled = false;
+    String buffer = "";
+    String responseText = "";
+    String language = "en";
 
-      response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
-        if (line.trim().isEmpty) return;
-        final data = jsonDecode(line);
+    response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
+      if (line.trim().isEmpty) return;
 
-        if (data["token"] != null) {
-          buffer += data["token"];
-          responseText = jsonDecode(buffer)["response"];
+      final data = jsonDecode(line);
 
+      // TEXT STREAM
+      if (data["token"] != null) {
+        buffer = data["token"];
+        responseText = buffer;
+
+        if (_input_type == InputType.text) {
           // Create new message
           setState(() {
             _isTyping = false;
-            _messages.add(ChatMessage(
+            _messages.last = _messages.last.copyWith(
               text: responseText,
-              isUser: false,
-            ));
+            );
           });
-
           _scrollToBottom();
         }
+      }
 
-        if (data["done"] == true) {
-          // Get data
-          hasActionButtons = data["hasActionButtons"] == true;
-          language = data["language"] ?? "en";
-          if (data["learningConcepts"] != null) {
-            data["learningConcepts"].forEach((element) {
-              learningConcepts.add(element.toString());
-            });
-          }
-          voiceEnabled = data["voiceEnabled"] == false;
+      // SENTENCE FOR VOICE
+      if (_input_type == InputType.speech && data["sentence"] != null) {
+        language = data["language"] ?? "en";
 
+        final uri = Uri.parse(
+          "${ChatApiService.baseUrl}/tts/sentence"
+          "?text=${Uri.encodeComponent(data["sentence"])}"
+          "&language=$language",
+        );
+
+        await _voicePlayer.setAudioSource(AudioSource.uri(uri));
+        await _voicePlayer.play();
+      }
+
+      // FINAL MESSAGE
+      if (data["done"] == true) {
+        language = data["language"] ?? "en";
+
+        // SPEECH MODE DISPLAY AFTER SPEAKING
+        if (_input_type == InputType.speech) {
+          _voicePlayer.playerStateStream.listen((state) {
+            if (state.processingState == ProcessingState.completed) {
+              setState(() {
+                _isTyping = false;
+                _messages.last = _messages.last.copyWith(
+                  text: responseText,
+                  hasActionButtons: data["hasActionButtons"] == true,
+                  learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
+                  language: language,
+                );
+              });
+              _scrollToBottom();
+            }
+          });
+        } else {
           // Update created message
           setState(() {
             _messages.last = _messages.last.copyWith(
-              hasActionButtons: hasActionButtons,
-              learningConcepts: learningConcepts,
+              hasActionButtons: data["hasActionButtons"] == true,
+              learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
               language: language,
             );
           });
-
           _scrollToBottom();
-
-          if (voiceEnabled) {
-            _playStreamingVoice(responseText, language);
-          }
         }
-      });
-    } catch (e) {
-      setState(() {
-        _messages.add(
-          ChatMessage(
-            text: "Sorry 😔 I couldn't respond right now.",
-            isUser: false,
-          ),
-        );
-      });
-    } finally {
-      //setState(() => _isTyping = false);
-    }
+      }
+    });
   }
 
   void _showLoginSheet() {
@@ -301,12 +279,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
-                    itemCount: _messages.length + (_isTyping ? 1 : 0),
+                    itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      // Adjust index for typing indicator if present
-                      if (_isTyping && index == _messages.length) {
+                      final message = _messages[index];
+                      
+                      // Show typing indicator instead of the empty placeholder
+                      if (_isTyping && !message.isUser && message.text.isEmpty && index == _messages.length - 1) {
                         return const Padding(
-                          padding: EdgeInsets.all(16.0),
+                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                           child: Text(
                             "Linguamate is typing...",
                             style: TextStyle(
@@ -319,7 +299,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       // For standard list view (not reversed), index 0 is top.
                       // I will use a simple mapping.
-                      return ChatBubble(message: _messages[index]);
+                      return ChatBubble(message: message);
                     },
                   ),
           ),
