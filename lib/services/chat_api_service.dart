@@ -25,30 +25,12 @@ class ChatApiService {
     }
   }
 
-  // static Future<Map<String, dynamic>> sendMessage(String message, InputType inputType) async {
-  //   final url = Uri.parse('$baseUrl/grammar-correct');
-  //   print("Sending message to backend: $message");
-  //   print("Input type: ${inputType.name}");
-
-  //   final response = await http.post(
-  //     url,
-  //     headers: {'Content-Type': 'application/json'},
-  //     body: jsonEncode({"text": message, "input_type": inputType.name}),
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     final decodedResponse = jsonDecode(response.body);
-  //     return {
-  //       "response": decodedResponse["response"],
-  //       "language": decodedResponse["language"],
-  //       "hasActionButtons": decodedResponse["hasActionButtons"] ?? false,
-  //       "learningConcepts": decodedResponse["learningConcepts"] != null
-  //           ? List<String>.from(decodedResponse["learningConcepts"])
-  //           : null,
-  //       "voiceEnabled": decodedResponse["voiceEnabled"] ?? false,
-  //     };
-  //   } else {
-  //     throw Exception("Failed to get response from server");
-  //   }
-  // }
+  static Future<Uri> getSentence(String text, String language) async {
+    final url = Uri.parse(
+      "$baseUrl/tts/sentence"
+      "?text=${Uri.encodeComponent(text)}"
+      "&language=$language",
+    );
+    return url;
+  }
 }

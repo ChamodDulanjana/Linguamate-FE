@@ -100,91 +100,156 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     _textController.clear();
 
+    int aiMessageIndex = -1;
     // Show user message
     setState(() {
       _isTyping = true;
       _isComposing = false;
       _messages.add(ChatMessage(text: text, isUser: true));
       _messages.add(ChatMessage(text: "", isUser: false)); // placeholder AI message
+      aiMessageIndex = _messages.length - 1;
     });
     _scrollToBottom();
 
     // Retrieve AI response
-    final response = await ChatApiService.sendMessage(text, _input_type);
+    try {
+      final response = await ChatApiService.sendMessage(text, _input_type);
 
-    String buffer = "";
-    String responseText = "";
-    String language = "en";
+      String completeStreamedText = "";
+      String displayResponseText = "";
+      String language = "en";
+      int lastQueuedLength = 0;
+      final ConcatenatingAudioSource playlist = ConcatenatingAudioSource(
+        useLazyPreparation: true, 
+        children: []
+      );
 
-    response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
-      if (line.trim().isEmpty) return;
+      if (_input_type == InputType.speech) {
+        await _voicePlayer.setAudioSource(playlist);
+      }
 
-      final data = jsonDecode(line);
+      response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
+        if (line.trim().isEmpty) return;
 
-      // TEXT STREAM
-      if (data["token"] != null) {
-        buffer = data["token"];
-        responseText = buffer;
+        try {
+          final data = jsonDecode(line);
 
-        if (_input_type == InputType.text) {
-          // Create new message
+          // TEXT STREAM
+          if (data["token"] != null) {
+            completeStreamedText += data["token"];
+
+            // Extract value of "response" from completeStreamedText
+            final match = RegExp(r'"response"\s*:\s*"((?:\\.|[^"\\])*)').firstMatch(completeStreamedText);
+            if (match != null) {
+              String rawValue = match.group(1) ?? "";
+              displayResponseText = rawValue.replaceAll(r'\"', '"').replaceAll(r'\\', '\\').replaceAll(r'\n', '\n');
+            }
+
+            if (displayResponseText.isNotEmpty && mounted) {
+              if (_input_type == InputType.text) {
+                // Create new message
+                setState(() {
+                  _isTyping = false;
+                  _messages[aiMessageIndex] = _messages[aiMessageIndex].copyWith(
+                    text: displayResponseText,
+                  );
+                });
+                _scrollToBottom();
+              }
+            }
+          }
+
+          // SENTENCE FOR VOICE QUEUE
+          if (_input_type == InputType.speech) {
+            language = data["language"] ?? "en";
+            String unprocessed = displayResponseText.substring(lastQueuedLength);
+            
+            // Look for sentences ending with . ! ? followed by whitespace or newline
+            final Iterable<Match> matches = RegExp(r'([^.!?]+[.!?]+)(?=\s|\n)').allMatches(unprocessed);
+            
+            int localLast = 0;
+            for (Match m in matches) {
+              String sentence = m.group(1)!.trim();
+              if (sentence.isNotEmpty) {
+                ChatApiService.getSentence(sentence, language).then((uri) {
+                  playlist.add(AudioSource.uri(uri));
+                  if (!_voicePlayer.playing) {
+                    _voicePlayer.play();
+                  }
+                });
+              }
+              localLast = m.end;
+            }
+            lastQueuedLength += localLast;
+          }
+
+              // FINAL MESSAGE
+          if (data["done"] == true) {
+            language = data["language"] ?? "en";
+            
+            // Queue any remaining text that didn't end in punctuation
+            if (_input_type == InputType.speech) {
+              String remainder = displayResponseText.substring(lastQueuedLength).trim();
+              if (remainder.isNotEmpty) {
+                ChatApiService.getSentence(remainder, language).then((uri) {
+                  playlist.add(AudioSource.uri(uri));
+                  if (!_voicePlayer.playing) {
+                    _voicePlayer.play();
+                  }
+                });
+              }
+            }
+
+            void showFinalText() {
+              if (mounted && aiMessageIndex < _messages.length) {
+                setState(() {
+                  _isTyping = false;
+                  _messages[aiMessageIndex] = _messages[aiMessageIndex].copyWith(
+                    text: displayResponseText,
+                    hasActionButtons: data["hasActionButtons"] == true,
+                    learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
+                    language: language,
+                  );
+                });
+                _scrollToBottom();
+              }
+            }
+
+            if (_input_type == InputType.speech) {
+              // Wait for playlist to finish playing properly
+              if (playlist.children.isEmpty && _voicePlayer.processingState == ProcessingState.idle) {
+                 showFinalText();
+              } else {
+                 _voicePlayer.playerStateStream.firstWhere(
+                  (state) => state.processingState == ProcessingState.completed || state.processingState == ProcessingState.idle
+                 ).then((_) {
+                   // Adding a tiny delay guarantees JustAudio has cleaned up the stream end gracefully
+                   Future.delayed(const Duration(milliseconds: 300), showFinalText);
+                 });
+              }
+            } else {
+              showFinalText();
+            }
+          }
+        } catch (e) {
+          print("Stream decode error: $e");
+        }
+      }, onError: (e) {
+        if (mounted) {
           setState(() {
             _isTyping = false;
-            _messages.last = _messages.last.copyWith(
-              text: responseText,
-            );
+            _messages.last = _messages.last.copyWith(text: "Stream Connection Error: $e");
           });
-          _scrollToBottom();
         }
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.last = _messages.last.copyWith(text: "API Request Error: $e");
+        });
       }
-
-      // SENTENCE FOR VOICE
-      if (_input_type == InputType.speech && data["sentence"] != null) {
-        language = data["language"] ?? "en";
-
-        final uri = Uri.parse(
-          "${ChatApiService.baseUrl}/tts/sentence"
-          "?text=${Uri.encodeComponent(data["sentence"])}"
-          "&language=$language",
-        );
-
-        await _voicePlayer.setAudioSource(AudioSource.uri(uri));
-        await _voicePlayer.play();
-      }
-
-      // FINAL MESSAGE
-      if (data["done"] == true) {
-        language = data["language"] ?? "en";
-
-        // SPEECH MODE DISPLAY AFTER SPEAKING
-        if (_input_type == InputType.speech) {
-          _voicePlayer.playerStateStream.listen((state) {
-            if (state.processingState == ProcessingState.completed) {
-              setState(() {
-                _isTyping = false;
-                _messages.last = _messages.last.copyWith(
-                  text: responseText,
-                  hasActionButtons: data["hasActionButtons"] == true,
-                  learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
-                  language: language,
-                );
-              });
-              _scrollToBottom();
-            }
-          });
-        } else {
-          // Update created message
-          setState(() {
-            _messages.last = _messages.last.copyWith(
-              hasActionButtons: data["hasActionButtons"] == true,
-              learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
-              language: language,
-            );
-          });
-          _scrollToBottom();
-        }
-      }
-    });
+    }
   }
 
   void _showLoginSheet() {
@@ -285,11 +350,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       
                       // Show typing indicator instead of the empty placeholder
                       if (_isTyping && !message.isUser && message.text.isEmpty && index == _messages.length - 1) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                           child: Text(
-                            "Linguamate is typing...",
-                            style: TextStyle(
+                            _input_type == InputType.speech ? "Linguamate is speaking..." : "Linguamate is typing...",
+                            style: const TextStyle(
                               color: Colors.grey,
                               fontStyle: FontStyle.italic,
                             ),
