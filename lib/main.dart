@@ -9,6 +9,7 @@ import 'utils/theme_manager.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(); // Initialize Firebase
   runApp(const LinguaMateApp());
