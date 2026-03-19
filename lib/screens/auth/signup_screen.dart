@@ -16,7 +16,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
-  bool _isEmailEditable = false;
 
   @override
   void initState() {
@@ -96,24 +95,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   // Email field
                   TextFormField(
                     controller: _emailController,
-                    readOnly: !_isEmailEditable,
-                    decoration: InputDecoration(
+                    readOnly: true,
+                    decoration: const InputDecoration(
                       labelText: 'Email',
-                      border: const OutlineInputBorder(),
-                      suffix: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isEmailEditable = true;
-                          });
-                        },
-                        child: Text(
-                          _isEmailEditable ? '' : 'Edit',
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.email,
