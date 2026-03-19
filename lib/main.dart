@@ -6,9 +6,11 @@ import 'screens/learning_screen.dart';
 import 'screens/activities_screen.dart';
 
 import 'utils/theme_manager.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(const LinguaMateApp());
 }
 
