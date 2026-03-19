@@ -1,3 +1,4 @@
+import 'package:LinguaMate/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
@@ -26,10 +27,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
   }
 
   void _startVerificationCheck() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       final user = FirebaseAuth.instance.currentUser;
       await user?.reload();
-      if (user?.emailVerified ?? false) {
+      if (user != null && user.emailVerified) {
         timer.cancel();
         if (mounted) {
           setState(() {
@@ -38,6 +39,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Verification Success!')),
           );
+          await UserService().saveUser(user); // Save user to database
           await Future.delayed(const Duration(seconds: 2));
           if (mounted) {
             Navigator.of(context).pushReplacement(
