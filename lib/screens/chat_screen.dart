@@ -119,13 +119,11 @@ class _ChatScreenState extends State<ChatScreen> {
       String displayResponseText = "";
       String language = "en";
       int lastQueuedLength = 0;
-      final ConcatenatingAudioSource playlist = ConcatenatingAudioSource(
-        useLazyPreparation: true, 
-        children: []
-      );
+      final List<AudioSource> playlist = [];
 
       if (_input_type == InputType.speech) {
-        await _voicePlayer.setAudioSource(playlist);
+        // Initialize with empty playlist
+        await _voicePlayer.setAudioSources(playlist);
       }
 
       response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
@@ -171,8 +169,9 @@ class _ChatScreenState extends State<ChatScreen> {
             for (Match m in matches) {
               String sentence = m.group(1)!.trim();
               if (sentence.isNotEmpty) {
-                ChatApiService.getSentence(sentence, language).then((uri) {
+                ChatApiService.getSentence(sentence, language).then((uri) async {
                   playlist.add(AudioSource.uri(uri));
+                  await _voicePlayer.setAudioSources(playlist);
                   if (!_voicePlayer.playing) {
                     _voicePlayer.play();
                   }
@@ -191,8 +190,9 @@ class _ChatScreenState extends State<ChatScreen> {
             if (_input_type == InputType.speech) {
               String remainder = displayResponseText.substring(lastQueuedLength).trim();
               if (remainder.isNotEmpty) {
-                ChatApiService.getSentence(remainder, language).then((uri) {
+                ChatApiService.getSentence(remainder, language).then((uri) async {
                   playlist.add(AudioSource.uri(uri));
+                  await _voicePlayer.setAudioSources(playlist);
                   if (!_voicePlayer.playing) {
                     _voicePlayer.play();
                   }
@@ -217,7 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
             if (_input_type == InputType.speech) {
               // Wait for playlist to finish playing properly
-              if (playlist.children.isEmpty && _voicePlayer.processingState == ProcessingState.idle) {
+              if (_voicePlayer.sequence.isEmpty) {
                  showFinalText();
               } else {
                  _voicePlayer.playerStateStream.firstWhere(
