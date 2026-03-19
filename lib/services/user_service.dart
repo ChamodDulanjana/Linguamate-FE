@@ -12,4 +12,13 @@ class UserService {
       "createdAt": DateTime.now(),
     }, SetOptions(merge: true));
   }
+
+  Future<bool> checkEmailExists(String email) async {
+    final snapshot = await _db
+        .collection("users")
+        .where("email", isEqualTo: email)
+        .limit(1)
+        .get();
+    return snapshot.docs.isNotEmpty;
+  }
 }

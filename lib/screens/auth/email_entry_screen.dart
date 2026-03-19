@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../../utils/validators.dart';
+import '../../services/user_service.dart';
 
 class EmailEntryScreen extends StatefulWidget {
   const EmailEntryScreen({super.key});
@@ -20,23 +21,42 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
     super.dispose();
   }
 
-  void _handleContinue() {
-    if (_formKey.currentState!.validate()) {
-      final email = _emailController.text.trim();
-      // Mock logic: check if email exists
-      // For this demo, let's say 'test@example.com' exists, others are new.
-      final exists = email == 'test@example.com';
+  bool _isLoading = false;
 
-      if (!exists) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen(email: email)),
+  Future<void> _handleContinue() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final email = _emailController.text.trim();
+        final exists = await UserService().checkEmailExists(email);
+
+        if (!mounted) return;
+
+        if (exists) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen(email: email)),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SignupScreen(email: email)),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking email: $e')),
         );
-      } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SignupScreen(email: email)),
-        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -120,7 +140,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
 
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _handleContinue,
+                    onPressed: _isLoading ? null : _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -129,7 +149,16 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text('Continue'),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Continue'),
                   ),
                   const SizedBox(height: 24),
                   const Row(
