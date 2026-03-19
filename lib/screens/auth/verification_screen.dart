@@ -1,18 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+import 'login_screen.dart';
 
 class VerificationScreen extends StatefulWidget {
   final String email;
 
-  const VerificationScreen({super.key, required this.email});
+  const VerificationScreen({
+    super.key, 
+    required this.email,
+  });
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  final _codeController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  Timer? _timer;
+  bool _isVerified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startVerificationCheck();
+  }
+
+  void _startVerificationCheck() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      final user = FirebaseAuth.instance.currentUser;
+      await user?.reload();
+      if (user?.emailVerified ?? false) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _isVerified = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Verification Success!')),
+          );
+          await Future.delayed(const Duration(seconds: 2));
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => LoginScreen(email: widget.email),
+              ),
+            );
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +73,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
                   Center(
@@ -54,60 +95,35 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Enter the verification code we just sent to ${widget.email}.',
+                    'Click the verification link we just sent to ${widget.email}.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 40),
 
-                  // code field
-                  TextFormField(
-                    controller: _codeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Code',
-                      border: OutlineInputBorder(),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Code cannot be empty';
-                      }
-                      return null;
-                    },
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(6),
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                  ),
+                  // No code field needed for email link verification
 
                   const SizedBox(height: 24),
 
-                  // Continue button
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Verification Successful!'),
-                          ),
-                        );
-
-                        Navigator.of(
-                          context,
-                        ).popUntil((route) => route.isFirst);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text('Continue'),
-                  ),
+                  // Auto-verifying indicator
+                  _isVerified
+                      ? const Column(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green, size: 64),
+                            SizedBox(height: 16),
+                            Text(
+                              'Verification Success!',
+                              style: TextStyle(fontSize: 18, color: Colors.green, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        )
+                      : const Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Waiting for verification...'),
+                          ],
+                        ),
 
                   const SizedBox(height: 24),
                   const Row(
@@ -122,10 +138,22 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   ),
                   const SizedBox(height: 24),
                   OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email resent!')),
-                      );
+                    onPressed: _isVerified ? null : () async {
+                      try {
+                        final user = FirebaseAuth.instance.currentUser;
+                        await user?.sendEmailVerification();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Verification email resent!')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to resend: $e')),
+                          );
+                        }
+                      }
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -147,7 +175,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

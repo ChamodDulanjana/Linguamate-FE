@@ -10,6 +10,9 @@ class AuthService {
       email: email,
       password: password,
     );
+
+    // Send verification email
+    await res.user?.sendEmailVerification();
     return res.user;
   }
 
