@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "39191230792",
+    "project_id": "linguamate-5d74f",
+    "storage_bucket": "linguamate-5d74f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39191230792:android:6264b7f3dffec52d52db7d",
+        "android_client_info": {
+          "package_name": "com.chamod.linguamate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDRRzghiuCmTQeyB0WTIX9NKjsRimrgC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
