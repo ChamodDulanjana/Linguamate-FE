@@ -4,9 +4,14 @@ import 'edit_profile_screen.dart';
 import '../widgets/appearance_dialog.dart';
 import '../utils/theme_manager.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -78,27 +83,12 @@ class SettingsScreen extends StatelessWidget {
 
             // Edit Profile Button
             ElevatedButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => Container(
-                    // height removed to fit content
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                      child: const EditProfileScreen(),
-                    ),
-                  ),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EditProfileScreen()),
                 );
+                setState(() {}); // Rebuild to fetch updated name
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDarkMode
@@ -138,13 +128,6 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.email_outlined,
                 title: 'Email',
                 subtitle: email,
-              ),
-              const Divider(height: 1, indent: 50),
-              _buildSettingItem(
-                context,
-                icon: Icons.phone_outlined,
-                title: 'Phone number',
-                subtitle: '+94773810577',
               ),
             ]),
             const SizedBox(height: 24),

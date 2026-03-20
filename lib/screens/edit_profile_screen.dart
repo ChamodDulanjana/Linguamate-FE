@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -8,53 +9,55 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameController = TextEditingController(text: "chamoddulanjana");
-  final _emailController = TextEditingController(
-    text: "chamodperera128@gmail.com",
-  );
-  final _contactController = TextEditingController(text: "+94773810577");
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    _emailController.text = user?.email ?? "";
+    _nameController.text = user?.displayName ?? (user?.email?.split('@').first ?? "");
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _contactController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFF5F7FB),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Custom Header to replace AppBar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Icon(
-                    Icons.close,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
+    
+    return Scaffold(
+      backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFF5F7FB),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
                 children: [
                   const SizedBox(height: 10),
                   // Profile Image with Camera
@@ -122,22 +125,52 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   // Name
                   _buildEditField("Name", _nameController),
-                  const SizedBox(height: 20),
-
-                  // Contact
-                  _buildEditField("Contact", _contactController),
                   const SizedBox(height: 30),
 
                   // Save Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Profile updated!")),
-                        );
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user != null) {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                try {
+                                  final newName = _nameController.text.trim();
+                                  
+                                  // 1. Update Firebase Auth Profile (Fixes your local displayName)
+                                  await user.updateDisplayName(newName);
+                                  
+                                  // 2. Update Firestore DB
+                                  await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+                                    "name": newName,
+                                  }, SetOptions(merge: true));
+
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Profile updated!")),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Failed to save: $e")),
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                  }
+                                }
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Theme.of(
@@ -148,13 +181,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: const Text(
-                        "Save profile",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(
+                              "Save profile",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 34), // Add bottom padding
@@ -163,6 +202,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

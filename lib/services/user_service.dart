@@ -8,7 +8,7 @@ class UserService {
     await _db.collection("users").doc(user.uid).set({
       "uid": user.uid,
       "email": user.email,
-      "name": user.displayName ?? "",
+      "name": user.displayName ?? user.email!.split('@').first,
       "createdAt": DateTime.now(),
     }, SetOptions(merge: true));
   }
