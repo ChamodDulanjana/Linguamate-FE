@@ -12,7 +12,20 @@
           "package_name": "com.chamod.linguamate"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "39191230792-7v3cv04akfaldh8tsbm5qdee5pr6bfmv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chamod.linguamate",
+            "certificate_hash": "5291f1635671c3a9331588e7438d01c041224da4"
+          }
+        },
+        {
+          "client_id": "39191230792-61qcijo52sb3e6v4pobs7k8vti6io3t0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCDRRzghiuCmTQeyB0WTIX9NKjsRimrgC4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "39191230792-61qcijo52sb3e6v4pobs7k8vti6io3t0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
