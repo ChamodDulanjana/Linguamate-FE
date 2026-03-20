@@ -222,7 +222,7 @@ class MenuDrawer extends StatelessWidget {
             ),
             title: Text(
               name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             trailing: const Icon(Icons.more_horiz, color: Colors.grey),
             onTap: () {
