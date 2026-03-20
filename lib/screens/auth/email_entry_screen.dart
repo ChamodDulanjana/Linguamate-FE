@@ -1,3 +1,4 @@
+import '../../widgets/button_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
@@ -184,14 +185,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                         ),
                       ),
                       child: _isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                            )
+                          ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
                           : const Text('Continue'),
                     ),
                   ),
@@ -217,20 +211,13 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                         ? null
                         : Image.asset(
                             'assets/images/google_icon.png',
-                            height: 24,
-                            width: 24,
+                            height: 20,
+                            width: 20,
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(Icons.g_mobiledata), // Fallback
                           ),
                     label: _isGoogleLoading
-                        ? SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                          )
+                        ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
                         : const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
