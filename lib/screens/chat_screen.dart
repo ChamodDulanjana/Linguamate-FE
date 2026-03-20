@@ -9,6 +9,8 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'dart:convert';
 import 'package:just_audio/just_audio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -27,9 +29,12 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false; // AI typing indicator state
   final AudioPlayer _voicePlayer = AudioPlayer();
   InputType _input_type = InputType.text;
+  bool _isLoggedIn = false;
+  StreamSubscription<User?>? _authStateSubscription;
 
   @override
   void dispose() {
+    _authStateSubscription?.cancel();
     _voicePlayer.dispose();
     _scrollController.dispose();
     _textController.dispose();
@@ -51,6 +56,14 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = user != null;
+        });
+      }
+    });
   }
 
   void _startListening() async {
@@ -284,23 +297,24 @@ class _ChatScreenState extends State<ChatScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: TextButton(
-              onPressed: _showLoginSheet,
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+          if (!_isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: TextButton(
+                onPressed: _showLoginSheet,
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
+                child: const Text('Log In'),
               ),
-              child: const Text('Log In'),
             ),
-          ),
         ],
       ),
-      drawer: MenuDrawer(),
+      drawer: MenuDrawer(isLoggedIn: _isLoggedIn),
       body: Column(
         children: [
           Expanded(
