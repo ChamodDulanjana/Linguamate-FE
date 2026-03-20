@@ -168,9 +168,10 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                     validator: Validators.email,
                   ),
 
+                  // Continue Button
                   const SizedBox(height: 24),
                   AnimatedOpacity(
-                    opacity: _isGoogleLoading ? 0.5 : 1.0,
+                    opacity: _isGoogleLoading ? 0.6 : 1.0,
                     duration: const Duration(milliseconds: 200),
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleContinue,
@@ -183,17 +184,19 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                         ),
                       ),
                       child: _isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: isDarkMode ? Colors.white : Colors.black,
                               ),
                             )
                           : const Text('Continue'),
                     ),
                   ),
+
+                  // OR
                   const SizedBox(height: 24),
                   const Row(
                     children: [
@@ -205,17 +208,30 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                       Expanded(child: Divider()),
                     ],
                   ),
+
+                  // Google Sign In Button
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _handleGoogleSignIn,
-                    icon: Image.asset(
-                      'assets/images/google_icon.png',
-                      height: 24,
-                      width: 24,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.g_mobiledata), // Fallback
-                    ),
-                    label: const Text('Continue with Google'),
+                    onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+                    icon: _isGoogleLoading
+                        ? null
+                        : Image.asset(
+                            'assets/images/google_icon.png',
+                            height: 24,
+                            width: 24,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.g_mobiledata), // Fallback
+                          ),
+                    label: _isGoogleLoading
+                        ? SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                          )
+                        : const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       foregroundColor: Theme.of(context).colorScheme.onSurface,
