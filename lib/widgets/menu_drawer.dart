@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_history.dart';
 import '../screens/settings_screen.dart';
 import 'login_sheet.dart';
@@ -6,7 +7,7 @@ import 'login_sheet.dart';
 class MenuDrawer extends StatelessWidget {
   final bool isLoggedIn;
 
-  MenuDrawer({super.key, this.isLoggedIn = true});
+  MenuDrawer({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +114,12 @@ class MenuDrawer extends StatelessWidget {
 
   Widget _buildUserContent(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? 'User';
+    final name = user?.displayName ?? email.split('@').first;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+
     return Column(
       children: [
         // Top Section with Search
@@ -203,19 +210,19 @@ class MenuDrawer extends StatelessWidget {
               top: 8,
               bottom: 12,
             ),
-            leading: const CircleAvatar(
-              backgroundColor: Color(0xFFFFD700), // Gold/Yellow color
+            leading: CircleAvatar(
+              backgroundColor: const Color(0xFFFFD700), // Gold/Yellow color
               child: Text(
-                "CD",
-                style: TextStyle(
+                initial,
+                style: const TextStyle(
                   color: Colors.black, // Keep black on Gold
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            title: const Text(
-              "Chamod Dulanjana",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            title: Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             trailing: const Icon(Icons.more_horiz, color: Colors.grey),
             onTap: () {
