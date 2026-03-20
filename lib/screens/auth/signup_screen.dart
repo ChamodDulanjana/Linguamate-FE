@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../utils/validators.dart';
+import '../../widgets/button_loading_indicator.dart';
 import 'verification_screen.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
 
 class SignupScreen extends StatefulWidget {
   final String email;
@@ -18,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void initState() {
@@ -68,6 +71,34 @@ class _SignupScreenState extends State<SignupScreen> {
             SnackBar(content: Text('Failed to sign up: $e')),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+    try {
+      final user = await AuthService().signInWithGoogle();
+      if (user != null) {
+        await UserService().saveUser(user);
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+              context, '/home', (route) => false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
       }
     }
   }
@@ -164,21 +195,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 24),
 
                   // Continue btn
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _handleContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                  AnimatedOpacity(
+                    opacity: _isGoogleLoading ? 0.6 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
+                      child: _isLoading
+                          ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
+                          : const Text('Continue'),
                     ),
-                    child: const Text('Continue'),
                   ),
 
+                  // OR
                   const SizedBox(height: 24),
                   const Row(
                     children: [
@@ -190,26 +226,30 @@ class _SignupScreenState extends State<SignupScreen> {
                       Expanded(child: Divider()),
                     ],
                   ),
+
+                  // Google Sign-In btn
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: Implement Google Sign In
-                    },
-                    icon: Image.asset(
-                      'assets/images/google_icon.png',
-                      height: 24,
-                      width: 24,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.g_mobiledata),
-                    ),
-                    label: const Text('Continue with Google'),
+                    onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+                    icon: _isGoogleLoading
+                        ? null
+                        : Image.asset(
+                            'assets/images/google_icon.png',
+                            height: 20,
+                            width: 20,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.g_mobiledata), // Fallback
+                          ),
+                    label: _isGoogleLoading
+                        ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
+                        : const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       foregroundColor: Theme.of(context).colorScheme.onSurface,
                       side: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.dark
+                        color: isDarkMode
                             ? Colors.grey.shade700
-                            : Colors.grey.shade300,
+                            : Colors.grey[300]!,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
