@@ -1,3 +1,4 @@
+import 'package:LinguaMate/widgets/button_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,6 +27,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _updateProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final newName = _nameController.text.trim();
+        
+        // 1. Update Firebase Auth Profile (Fixes your local displayName)
+        await user.updateDisplayName(newName);
+        
+        // 2. Update Firestore DB
+        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+          "name": newName,
+        }, SetOptions(merge: true));
+
+        if (context.mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Profile updated successfully!")),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to update profile: $e")),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -131,62 +171,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () async {
-                              final user = FirebaseAuth.instance.currentUser;
-                              if (user != null) {
-                                setState(() {
-                                  _isLoading = true;
-                                });
-                                try {
-                                  final newName = _nameController.text.trim();
-                                  
-                                  // 1. Update Firebase Auth Profile (Fixes your local displayName)
-                                  await user.updateDisplayName(newName);
-                                  
-                                  // 2. Update Firestore DB
-                                  await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
-                                    "name": newName,
-                                  }, SetOptions(merge: true));
-
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Profile updated!")),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Failed to save: $e")),
-                                    );
-                                  }
-                                } finally {
-                                  if (mounted) {
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
-                                  }
-                                }
-                              }
-                            },
+                      onPressed: _isLoading ? null : _updateProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onPrimary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
                           : const Text(
                               "Save profile",
                               style: TextStyle(
