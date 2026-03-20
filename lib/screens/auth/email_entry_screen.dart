@@ -3,6 +3,7 @@ import 'login_screen.dart';
 import 'signup_screen.dart';
 import '../../utils/validators.dart';
 import '../../services/user_service.dart';
+import '../../services/auth_service.dart';
 
 class EmailEntryScreen extends StatefulWidget {
   const EmailEntryScreen({super.key});
@@ -22,6 +23,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
   }
 
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   Future<void> _handleContinue() async {
     if (_formKey.currentState!.validate()) {
@@ -57,6 +59,34 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
             _isLoading = false;
           });
         }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
+    try {
+      final user = await AuthService().signInWithGoogle();
+      if (user != null) {
+        await UserService().saveUser(user);
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+              context, '/home', (route) => false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
       }
     }
   }
@@ -139,26 +169,30 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                  AnimatedOpacity(
+                    opacity: _isGoogleLoading ? 0.5 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Continue'),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Continue'),
                   ),
                   const SizedBox(height: 24),
                   const Row(
@@ -173,9 +207,7 @@ class _EmailEntryScreenState extends State<EmailEntryScreen> {
                   ),
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: Implement Google Sign In
-                    },
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
                     icon: Image.asset(
                       'assets/images/google_icon.png',
                       height: 24,
