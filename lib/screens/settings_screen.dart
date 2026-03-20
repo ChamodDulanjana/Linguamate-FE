@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/appearance_dialog.dart';
 import '../utils/theme_manager.dart';
@@ -8,6 +9,11 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? 'unknown@example.com';
+    final name = user?.displayName ?? email.split('@').first;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -38,12 +44,12 @@ class SettingsScreen extends StatelessWidget {
           children: [
             // Profile Section
             const SizedBox(height: 10),
-            const CircleAvatar(
+            CircleAvatar(
               radius: 40,
-              backgroundColor: Color(0xFFFFD700),
+              backgroundColor: const Color(0xFFFFD700),
               child: Text(
-                'CH',
-                style: TextStyle(
+                initial,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -53,7 +59,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const SizedBox(height: 12),
             Text(
-              'chamoddulanjana',
+              name,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -62,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'chamoddulanjana',
+              email,
               style: TextStyle(
                 fontSize: 14,
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -124,14 +130,14 @@ class SettingsScreen extends StatelessWidget {
                 context,
                 icon: Icons.person_2_outlined,
                 title: 'Name',
-                subtitle: 'chamod dulanjana',
+                subtitle: name,
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
                 context,
                 icon: Icons.email_outlined,
                 title: 'Email',
-                subtitle: 'chamodperera128@gmail.com',
+                subtitle: email,
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
@@ -199,6 +205,15 @@ class SettingsScreen extends StatelessWidget {
                 textColor: Colors.red,
                 iconColor: Colors.red,
                 showArrow: false,
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  // Additional cleanup could go here if needed.
+                  // Just popping the settings screen will return visually to ChatScreen
+                  // and ChatScreen will rebuild out of logged-in state.
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                },
               ),
             ]),
             const SizedBox(height: 40),
