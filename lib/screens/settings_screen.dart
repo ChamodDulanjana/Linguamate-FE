@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/appearance_dialog.dart';
 import '../utils/theme_manager.dart';
+import '../services/auth_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -189,10 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 iconColor: Colors.red,
                 showArrow: false,
                 onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  // Additional cleanup could go here if needed.
-                  // Just popping the settings screen will return visually to ChatScreen
-                  // and ChatScreen will rebuild out of logged-in state.
+                  await AuthService().logout();
                   if (context.mounted) {
                     Navigator.pop(context);
                   }

@@ -1,3 +1,4 @@
+import 'package:LinguaMate/widgets/button_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
@@ -145,11 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? ButtonLoadingIndicator(isDarkMode: isDarkMode)
                         : const Text('Log in'),
                   ),
                   const SizedBox(height: 24),
