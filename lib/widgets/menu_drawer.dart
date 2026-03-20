@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_history.dart';
 import '../screens/settings_screen.dart';
+import '../services/chat_service.dart';
 import 'login_sheet.dart';
 
 class MenuDrawer extends StatelessWidget {
   final bool isLoggedIn;
+  final VoidCallback onNewChat;
+  final Function(String) onChatSelected;
 
-  MenuDrawer({super.key, required this.isLoggedIn});
+  const MenuDrawer({
+    super.key, 
+    required this.isLoggedIn,
+    required this.onNewChat,
+    required this.onChatSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +166,7 @@ class MenuDrawer extends StatelessWidget {
                 'assets/images/edit_icon.png',
                 "New chat",
                 context,
+                onNewChat,
               ),
               const SizedBox(height: 24),
 
@@ -170,20 +179,45 @@ class MenuDrawer extends StatelessWidget {
                 ),
               ),
 
-              ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 0,
-                  vertical: 2.0,
-                ),
-                itemCount: chatHistories.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  final chat = chatHistories[index];
-                  return _buildHistoryItem(
-                    chat.title,
-                    context,
-                    isPinned: chat.isPinned,
+              StreamBuilder<List<ChatHistory>>(
+                stream: user != null ? ChatService().getUserChats(user.uid) : const Stream.empty(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          "No recent chats",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  final chats = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 0,
+                      vertical: 2.0,
+                    ),
+                    itemCount: chats.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      final chat = chats[index];
+                      return _buildHistoryItem(
+                        chat.title,
+                        context,
+                        isPinned: chat.isPinned,
+                        onTap: () => onChatSelected(chat.id),
+                      );
+                    },
                   );
                 },
               ),
@@ -238,7 +272,7 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(String path, String title, BuildContext context) {
+  Widget _buildMenuItem(String path, String title, BuildContext context, VoidCallback onTap) {
     return ListTile(
       leading: Image.asset(
         path,
@@ -256,7 +290,7 @@ class MenuDrawer extends StatelessWidget {
       ),
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      onTap: () {},
+      onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
@@ -265,6 +299,7 @@ class MenuDrawer extends StatelessWidget {
     String title,
     BuildContext context, {
     bool isPinned = false,
+    required VoidCallback onTap,
   }) {
     return ListTile(
       title: Text(
@@ -282,19 +317,8 @@ class MenuDrawer extends StatelessWidget {
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       visualDensity: VisualDensity.compact,
-      onTap: () {},
+      onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
-
-  final List<ChatHistory> chatHistories = [
-    ChatHistory(title: 'Sample Chat 1', isPinned: true),
-    ChatHistory(title: 'Sample Chat 2'),
-    ChatHistory(title: 'Sample Chat 3'),
-    ChatHistory(title: 'Sample Chat 4'),
-    ChatHistory(title: 'Sample Chat 5'),
-    ChatHistory(title: 'Sample Chat 6'),
-    ChatHistory(title: 'Sample Chat 7'),
-    ChatHistory(title: 'Sample Chat 8'),
-  ];
 }

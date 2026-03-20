@@ -5,6 +5,7 @@ import '../widgets/chat_bubble.dart';
 import '../widgets/login_sheet.dart';
 import '../widgets/menu_drawer.dart';
 import '../services/chat_api_service.dart';
+import '../services/chat_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'dart:convert';
@@ -31,6 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
   InputType _input_type = InputType.text;
   bool _isLoggedIn = false;
   StreamSubscription<User?>? _authStateSubscription;
+  String? _currentChatId;
 
   @override
   void dispose() {
@@ -115,14 +117,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
     int aiMessageIndex = -1;
     // Show user message
+    final userMessage = ChatMessage(text: text, isUser: true);
     setState(() {
       _isTyping = true;
       _isComposing = false;
-      _messages.add(ChatMessage(text: text, isUser: true));
+      _messages.add(userMessage);
       _messages.add(ChatMessage(text: "", isUser: false)); // placeholder AI message
       aiMessageIndex = _messages.length - 1;
     });
     _scrollToBottom();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (_isLoggedIn && user != null) {
+      if (_currentChatId == null) {
+        _currentChatId = await ChatService().createChatSession(user.uid, text);
+      }
+      await ChatService().saveMessage(user.uid, _currentChatId!, userMessage);
+    }
 
     // Retrieve AI response
     try {
@@ -213,18 +224,25 @@ class _ChatScreenState extends State<ChatScreen> {
               }
             }
 
-            void showFinalText() {
+            void showFinalText() async {
               if (mounted && aiMessageIndex < _messages.length) {
+                final aiMessage = _messages[aiMessageIndex].copyWith(
+                  text: displayResponseText,
+                  hasActionButtons: data["hasActionButtons"] == true,
+                  learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
+                  language: language,
+                );
+                
                 setState(() {
                   _isTyping = false;
-                  _messages[aiMessageIndex] = _messages[aiMessageIndex].copyWith(
-                    text: displayResponseText,
-                    hasActionButtons: data["hasActionButtons"] == true,
-                    learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
-                    language: language,
-                  );
+                  _messages[aiMessageIndex] = aiMessage;
                 });
                 _scrollToBottom();
+
+                final user = FirebaseAuth.instance.currentUser;
+                if (_isLoggedIn && user != null && _currentChatId != null) {
+                  await ChatService().saveMessage(user.uid, _currentChatId!, aiMessage);
+                }
               }
             }
 
@@ -314,7 +332,36 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
         ],
       ),
-      drawer: MenuDrawer(isLoggedIn: _isLoggedIn),
+      drawer: MenuDrawer(
+        isLoggedIn: _isLoggedIn,
+        onNewChat: () {
+          setState(() {
+            _messages.clear();
+            _currentChatId = null;
+          });
+          Navigator.pop(context); // close drawer
+        },
+        onChatSelected: (chatId) async {
+          Navigator.pop(context); // close drawer
+          setState(() {
+            _messages.clear();
+            _currentChatId = chatId;
+            _isTyping = true; // wait for fetch
+          });
+          
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final oldMessages = await ChatService().getChatMessages(user.uid, chatId);
+            if (mounted) {
+              setState(() {
+                _messages.addAll(oldMessages);
+                _isTyping = false;
+              });
+              _scrollToBottom();
+            }
+          }
+        },
+      ),
       body: Column(
         children: [
           Expanded(
