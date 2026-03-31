@@ -33,4 +33,13 @@ class ChatApiService {
     );
     return url;
   }
+
+  static Future<Uri> getStream(String text, String language) async {
+    final url = Uri.parse(
+      "$baseUrl/tts/stream"
+      "?text=${Uri.encodeComponent(text)}"
+      "&language=$language",
+    );
+    return url;
+  }
 }

@@ -116,8 +116,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _textController.clear();
 
     int aiMessageIndex = -1;
+    ChatMessage aiMessage = ChatMessage(text: "", isUser: false);
+
     // Show user message
     final userMessage = ChatMessage(text: text, isUser: true);
+
     setState(() {
       _isTyping = true;
       _isComposing = false;
@@ -127,6 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _scrollToBottom();
 
+    // Save user message to database if logged in
     final user = FirebaseAuth.instance.currentUser;
     if (_isLoggedIn && user != null) {
       if (_currentChatId == null) {
@@ -142,13 +146,6 @@ class _ChatScreenState extends State<ChatScreen> {
       String completeStreamedText = "";
       String displayResponseText = "";
       String language = "en";
-      int lastQueuedLength = 0;
-      final List<AudioSource> playlist = [];
-
-      if (_input_type == InputType.speech) {
-        // Initialize with empty playlist
-        await _voicePlayer.setAudioSources(playlist);
-      }
 
       response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) async {
         if (line.trim().isEmpty) return;
@@ -156,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen> {
         try {
           final data = jsonDecode(line);
 
-          // TEXT STREAM
+          //TEXT STREAM
           if (data["token"] != null) {
             completeStreamedText += data["token"];
 
@@ -181,52 +178,67 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           }
 
-          // SENTENCE FOR VOICE QUEUE
-          if (_input_type == InputType.speech) {
-            language = data["language"] ?? "en";
-            String unprocessed = displayResponseText.substring(lastQueuedLength);
-            
-            // Look for sentences ending with . ! ? followed by whitespace or newline
-            final Iterable<Match> matches = RegExp(r'([^.!?]+[.!?]+)(?=\s|\n)').allMatches(unprocessed);
-            
-            int localLast = 0;
-            for (Match m in matches) {
-              String sentence = m.group(1)!.trim();
-              if (sentence.isNotEmpty) {
-                ChatApiService.getSentence(sentence, language).then((uri) async {
-                  playlist.add(AudioSource.uri(uri));
-                  await _voicePlayer.setAudioSources(playlist);
-                  if (!_voicePlayer.playing) {
-                    _voicePlayer.play();
-                  }
-                });
-              }
-              localLast = m.end;
-            }
-            lastQueuedLength += localLast;
-          }
-
-              // FINAL MESSAGE
+          // FINAL MESSAGE
           if (data["done"] == true) {
             language = data["language"] ?? "en";
-            
-            // Queue any remaining text that didn't end in punctuation
-            if (_input_type == InputType.speech) {
-              String remainder = displayResponseText.substring(lastQueuedLength).trim();
-              if (remainder.isNotEmpty) {
-                ChatApiService.getSentence(remainder, language).then((uri) async {
-                  playlist.add(AudioSource.uri(uri));
-                  await _voicePlayer.setAudioSources(playlist);
-                  if (!_voicePlayer.playing) {
-                    _voicePlayer.play();
-                  }
-                });
+
+            void saveToDb(ChatMessage msg) async {
+              final user = FirebaseAuth.instance.currentUser;
+              if (_isLoggedIn && user != null && _currentChatId != null) {
+                await ChatService().saveMessage(user.uid, _currentChatId!, msg);
               }
             }
 
-            void showFinalText() async {
+            // SPEECH MODE DISPLAY AFTER SPEAKING
+            if (_input_type == InputType.speech) {
+              try {
+                final uri = await ChatApiService.getSentence(displayResponseText, language);
+                await _voicePlayer.setAudioSource(AudioSource.uri(uri));
+                _voicePlayer.play();
+
+                StreamSubscription<PlayerState>? subscription;
+                subscription = _voicePlayer.playerStateStream.listen((state) {
+                  if (state.processingState == ProcessingState.completed) {
+                    subscription?.cancel();
+                    
+                    if (mounted && aiMessageIndex < _messages.length) {
+                      aiMessage = _messages[aiMessageIndex].copyWith(
+                        text: displayResponseText,
+                        hasActionButtons: data["hasActionButtons"] == true,
+                        learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
+                        language: language,
+                      );
+                      
+                      setState(() {
+                        _isTyping = false;
+                        _messages[aiMessageIndex] = aiMessage;
+                      });
+                      _scrollToBottom();
+                      saveToDb(aiMessage);
+                    }
+                  }
+                });
+              } catch (e) {
+                print("Audio error: \$e");
+                if (mounted && aiMessageIndex < _messages.length) {
+                  aiMessage = _messages[aiMessageIndex].copyWith(
+                    text: displayResponseText,
+                    hasActionButtons: data["hasActionButtons"] == true,
+                    learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
+                    language: language,
+                  );
+                  setState(() {
+                    _isTyping = false;
+                    _messages[aiMessageIndex] = aiMessage;
+                  });
+                  _scrollToBottom();
+                  saveToDb(aiMessage);
+                }
+              }
+            } else {
+              // DISPLAY FINAL MESSAGE FOR TEXT MODE
               if (mounted && aiMessageIndex < _messages.length) {
-                final aiMessage = _messages[aiMessageIndex].copyWith(
+                aiMessage = _messages[aiMessageIndex].copyWith(
                   text: displayResponseText,
                   hasActionButtons: data["hasActionButtons"] == true,
                   learningConcepts: List<String>.from(data["learningConcepts"] ?? []),
@@ -238,28 +250,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   _messages[aiMessageIndex] = aiMessage;
                 });
                 _scrollToBottom();
-
-                final user = FirebaseAuth.instance.currentUser;
-                if (_isLoggedIn && user != null && _currentChatId != null) {
-                  await ChatService().saveMessage(user.uid, _currentChatId!, aiMessage);
-                }
+                saveToDb(aiMessage);
               }
-            }
-
-            if (_input_type == InputType.speech) {
-              // Wait for playlist to finish playing properly
-              if (_voicePlayer.sequence.isEmpty) {
-                 showFinalText();
-              } else {
-                 _voicePlayer.playerStateStream.firstWhere(
-                  (state) => state.processingState == ProcessingState.completed || state.processingState == ProcessingState.idle
-                 ).then((_) {
-                   // Adding a tiny delay guarantees JustAudio has cleaned up the stream end gracefully
-                   Future.delayed(const Duration(milliseconds: 300), showFinalText);
-                 });
-              }
-            } else {
-              showFinalText();
             }
           }
         } catch (e) {
