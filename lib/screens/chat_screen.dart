@@ -473,23 +473,31 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             const SizedBox(width: 16),
             Expanded(
-              child: TextField(
-                controller: _textController,
-                onChanged: (text) {
-                  setState(() {
-                    _isComposing = text.isNotEmpty;
-                  });
-                },
-                decoration: const InputDecoration.collapsed(
-                  hintText: "Ask Linguamate...",
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
+                child: TextField(
+                  controller: _textController,
+                  minLines: 1,
+                  maxLines: 8,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  onChanged: (text) {
+                    setState(() {
+                      _isComposing = text.isNotEmpty;
+                    });
+                  },
+                  decoration: const InputDecoration.collapsed(
+                    hintText: "Ask Linguamate...",
+                  ),
                 ),
               ),
             ),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4.0),
+              margin: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 2.0),
               child: IconButton(
                 icon: Icon(
                   _isComposing
