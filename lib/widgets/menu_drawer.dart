@@ -5,7 +5,7 @@ import '../screens/settings_screen.dart';
 import '../services/chat_service.dart';
 import 'login_sheet.dart';
 
-class MenuDrawer extends StatelessWidget {
+class MenuDrawer extends StatefulWidget {
   final bool isLoggedIn;
   final String? currentChatId;
   final VoidCallback onNewChat;
@@ -22,13 +22,20 @@ class MenuDrawer extends StatelessWidget {
   });
 
   @override
+  State<MenuDrawer> createState() => _MenuDrawerState();
+}
+
+class _MenuDrawerState extends State<MenuDrawer> {
+  String _searchQuery = '';
+
+  @override
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           Expanded(
-            child: isLoggedIn
+            child: widget.isLoggedIn
                 ? _buildUserContent(context)
                 : _buildGuestContent(context),
           ),
@@ -37,6 +44,7 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
+  // If user is not logged in
   Widget _buildGuestContent(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
@@ -124,6 +132,7 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
+  // If user is logged in
   Widget _buildUserContent(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
@@ -141,14 +150,19 @@ class MenuDrawer extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
                   decoration: InputDecoration(
                     hintText: 'Search',
                     hintStyle: TextStyle(color: Colors.grey[600]),
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     filled: true,
                     fillColor: isDarkMode
-                        ? Colors.grey.withOpacity(0.1)
-                        : Colors.grey[100],
+                        ? Colors.grey.shade900
+                        : Colors.grey.shade200,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -170,8 +184,8 @@ class MenuDrawer extends StatelessWidget {
                 'assets/images/edit_icon.png',
                 "New chat",
                 context,
-                isSelected: currentChatId == null,
-                onTap: onNewChat,
+                isSelected: widget.currentChatId == null,
+                onTap: widget.onNewChat,
               ),
               const SizedBox(height: 24),
 
@@ -205,25 +219,29 @@ class MenuDrawer extends StatelessWidget {
                     );
                   }
                   
-                  final chats = snapshot.data!;
+                  final allChats = snapshot.data!;
+                  final matching = allChats.where((c) => c.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+                  final nonMatching = allChats.where((c) => !c.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+                  final displayChats = [...matching, ...nonMatching];
+                  
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 0,
                       vertical: 2.0,
                     ),
-                    itemCount: chats.length,
+                    itemCount: displayChats.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
-                      final chat = chats[index];
+                      final chat = displayChats[index];
                       return _buildHistoryItem(
                         chat.title,
                         chat.id,
                         user?.uid ?? '',
                         context,
                         isPinned: chat.isPinned,
-                        isSelected: chat.id == currentChatId,
-                        onTap: () => onChatSelected(chat.id),
+                        isSelected: chat.id == widget.currentChatId,
+                        onTap: () => widget.onChatSelected(chat.id),
                       );
                     },
                   );
@@ -432,7 +450,7 @@ class MenuDrawer extends StatelessWidget {
                 
                 if (context.mounted) {
                   Navigator.pop(context); // pop loading dialog
-                  onChatDeleted(chatId);
+                  widget.onChatDeleted(chatId);
                 }
               }
             }
