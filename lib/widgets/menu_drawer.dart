@@ -7,12 +7,14 @@ import 'login_sheet.dart';
 
 class MenuDrawer extends StatelessWidget {
   final bool isLoggedIn;
+  final String? currentChatId;
   final VoidCallback onNewChat;
   final Function(String) onChatSelected;
 
   const MenuDrawer({
     super.key, 
     required this.isLoggedIn,
+    this.currentChatId,
     required this.onNewChat,
     required this.onChatSelected,
   });
@@ -166,7 +168,8 @@ class MenuDrawer extends StatelessWidget {
                 'assets/images/edit_icon.png',
                 "New chat",
                 context,
-                onNewChat,
+                isSelected: currentChatId == null,
+                onTap: onNewChat,
               ),
               const SizedBox(height: 24),
 
@@ -213,8 +216,11 @@ class MenuDrawer extends StatelessWidget {
                       final chat = chats[index];
                       return _buildHistoryItem(
                         chat.title,
+                        chat.id,
+                        user?.uid ?? '',
                         context,
                         isPinned: chat.isPinned,
+                        isSelected: chat.id == currentChatId,
                         onTap: () => onChatSelected(chat.id),
                       );
                     },
@@ -272,53 +278,172 @@ class MenuDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(String path, String title, BuildContext context, VoidCallback onTap) {
-    return ListTile(
-      leading: Image.asset(
-        path,
-        color: Theme.of(context).colorScheme.onSurface,
-        width: 20,
-        height: 20,
+  Widget _buildMenuItem(String path, String title, BuildContext context, {bool isSelected = false, required VoidCallback onTap}) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDarkMode 
+        ? Colors.white.withOpacity(0.1) 
+        : Colors.black.withOpacity(0.05);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? selectedColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: Theme.of(context).colorScheme.onSurface,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Image.asset(
+                  path,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 
   Widget _buildHistoryItem(
     String title,
+    String chatId,
+    String userId,
     BuildContext context, {
     bool isPinned = false,
+    bool isSelected = false,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 14,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
+    Offset tapPosition = Offset.zero;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDarkMode 
+        ? Colors.white.withOpacity(0.1) 
+        : Colors.black.withOpacity(0.05);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? selectedColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+          onTapDown: (details) {
+            tapPosition = details.globalPosition;
+          },
+          onTap: onTap,
+          onLongPress: () async {
+            final action = await showMenu<String>(
+              context: context,
+              position: RelativeRect.fromLTRB(
+                tapPosition.dx,
+                tapPosition.dy,
+                tapPosition.dx,
+                tapPosition.dy,
+              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF2A2A2A)
+                  : Colors.white,
+              items: [
+                PopupMenuItem(
+                  value: 'pin',
+                  child: Row(
+                    children: [
+                      Icon(isPinned ? Icons.push_pin_outlined : Icons.push_pin, size: 20),
+                      const SizedBox(width: 12),
+                      Text(isPinned ? 'Unpin' : 'Pin'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                      const SizedBox(width: 12),
+                      const Text('Delete', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            );
+
+            if (action == 'pin') {
+              if (userId.isNotEmpty) {
+                await ChatService().togglePinStatus(userId, chatId, isPinned);
+              }
+            } else if (action == 'delete') {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Delete Chat'),
+                    content: const Text('Are you sure you want to delete this chat? This action cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  );
+                },
+              );
+              
+              if (confirm == true && userId.isNotEmpty) {
+                await ChatService().deleteChat(userId, chatId);
+              }
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
+                    ),
+                  ),
+                ),
+                if (isPinned)
+                  const Icon(Icons.push_pin, size: 16, color: Colors.grey),
+              ],
+            ),
+          ),
         ),
       ),
-      trailing: isPinned
-          ? const Icon(Icons.push_pin, size: 16, color: Colors.grey)
-          : null,
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      visualDensity: VisualDensity.compact,
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }

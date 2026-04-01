@@ -327,6 +327,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       drawer: MenuDrawer(
         isLoggedIn: _isLoggedIn,
+        currentChatId: _currentChatId,
         onNewChat: () {
           setState(() {
             _messages.clear();

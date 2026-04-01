@@ -52,7 +52,12 @@ class ChatService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ChatHistory.fromMap(doc.id, doc.data())).toList();
+      final allChats = snapshot.docs.map((doc) => ChatHistory.fromMap(doc.id, doc.data())).toList();
+      
+      final pinnedChats = allChats.where((chat) => chat.isPinned).toList();
+      final unpinnedChats = allChats.where((chat) => !chat.isPinned).toList();
+      
+      return [...pinnedChats, ...unpinnedChats];
     });
   }
 
@@ -68,5 +73,39 @@ class ChatService {
         .get();
 
     return snapshot.docs.map((doc) => ChatMessage.fromMap(doc.data())).toList();
+  }
+
+  // 5. Delete a chat
+  Future<void> deleteChat(String userId, String chatId) async {
+    final messages = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .get();
+        
+    for (var doc in messages.docs) {
+      await doc.reference.delete();
+    }
+    
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('chats')
+        .doc(chatId)
+        .delete();
+  }
+
+  // 6. Pin/Unpin a chat
+  Future<void> togglePinStatus(String userId, String chatId, bool currentStatus) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('chats')
+        .doc(chatId)
+        .update({
+      'isPinned': !currentStatus,
+    });
   }
 }
