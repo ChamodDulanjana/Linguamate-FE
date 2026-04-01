@@ -33,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoggedIn = false;
   StreamSubscription<User?>? _authStateSubscription;
   String? _currentChatId;
+  bool _isLoadingChat = false;
 
   @override
   void dispose() {
@@ -340,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _messages.clear();
             _currentChatId = chatId;
             _input_type = InputType.text;
-            _isTyping = true; // wait for fetch
+            _isLoadingChat = true; // wait for fetch
           });
           
           final user = FirebaseAuth.instance.currentUser;
@@ -349,9 +350,15 @@ class _ChatScreenState extends State<ChatScreen> {
             if (mounted) {
               setState(() {
                 _messages.addAll(oldMessages);
-                _isTyping = false;
+                _isLoadingChat = false;
               });
               _scrollToBottom();
+            }
+          } else {
+            if (mounted) {
+              setState(() {
+                _isLoadingChat = false;
+              });
             }
           }
         },
@@ -359,10 +366,12 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _messages.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            child: _isLoadingChat
+                ? const Center(child: CircularProgressIndicator())
+                : _messages.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
