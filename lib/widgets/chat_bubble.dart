@@ -12,7 +12,7 @@ class ChatBubble extends StatelessWidget {
     return AnimatedBuilder(
       animation: ThemeManager.instance,
       builder: (context, child) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        //final isDarkMode = Theme.of(context).brightness == Brightness.dark;
         return Align(
           alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
