@@ -12,6 +12,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(); // Initialize Firebase
+  await ThemeManager.instance.initialize(); // Initialize Theme Manager
   runApp(const LinguaMateApp());
 }
 

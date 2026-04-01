@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AccentColorOption { defaultColor, blue, green, yellow, pink, orange }
 
@@ -15,17 +16,39 @@ class ThemeManager with ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   AccentColorOption get accentColor => _accentColor;
 
-  void setThemeMode(ThemeMode mode) {
+  Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    final themeIndex = prefs.getInt('theme_mode');
+    if (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length) {
+      _themeMode = ThemeMode.values[themeIndex];
+    }
+    
+    final accentIndex = prefs.getInt('accent_color');
+    if (accentIndex != null && accentIndex >= 0 && accentIndex < AccentColorOption.values.length) {
+      _accentColor = AccentColorOption.values[accentIndex];
+    }
+    
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
     if (_themeMode != mode) {
       _themeMode = mode;
       notifyListeners();
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('theme_mode', mode.index);
     }
   }
 
-  void setAccentColor(AccentColorOption color) {
+  Future<void> setAccentColor(AccentColorOption color) async {
     if (_accentColor != color) {
       _accentColor = color;
       notifyListeners();
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('accent_color', color.index);
     }
   }
 
