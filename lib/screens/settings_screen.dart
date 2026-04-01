@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/appearance_dialog.dart';
+import '../widgets/accent_color_dialog.dart';
 import '../utils/theme_manager.dart';
 import '../services/auth_service.dart';
 
@@ -144,14 +145,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Appearance',
                     subtitle: ThemeManager.instance.themeName,
                     onTap: () => _showAppearanceDialog(context),
+                    showDropdownIcon: true,
                   ),
                   const Divider(height: 1, indent: 50),
                   _buildSettingItem(
                     context,
                     icon: Icons.brush_outlined,
                     title: 'Accent color',
-                    subtitle: 'Default',
+                    subtitleWidget: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 14,
+                          color: ThemeManager.instance.getAccentColorValue(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          ThemeManager.instance.accentColorName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
                     showDropdownIcon: true,
+                    onTap: () => _showAccentColorDialog(context),
                   ),
                 ]);
               },
@@ -235,6 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required String title,
     String? subtitle,
+    Widget? subtitleWidget,
     Color? textColor,
     Color? iconColor,
     bool showArrow = true,
@@ -258,7 +281,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: effectiveTextColor,
         ),
       ),
-      subtitle: subtitle != null
+      subtitle: subtitleWidget ?? (subtitle != null
           ? Text(
               subtitle,
               style: TextStyle(
@@ -266,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
             )
-          : null,
+          : null),
       trailing: showDropdownIcon
           ? Icon(
               Icons.keyboard_arrow_down,
@@ -285,5 +308,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showAppearanceDialog(BuildContext context) {
     showDialog(context: context, builder: (context) => AppearanceDialog());
+  }
+
+  void _showAccentColorDialog(BuildContext context) {
+    showDialog(context: context, builder: (context) => const AccentColorDialog());
   }
 }

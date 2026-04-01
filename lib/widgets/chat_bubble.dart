@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
+import '../utils/theme_manager.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -8,23 +9,23 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: message.isUser
-              ? (isDarkMode
-                    ? const Color.fromARGB(255, 83, 83, 83)
-                    : Theme.of(context).colorScheme.primary)
-              : Colors.transparent,
-          borderRadius: BorderRadius.only(
+    return AnimatedBuilder(
+      animation: ThemeManager.instance,
+      builder: (context, child) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Align(
+          alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: message.isUser
+                  ? Color(ThemeManager.instance.getAccentColorValue(context).value).withValues(alpha: 0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
-            bottomLeft: message.isUser
+            bottomLeft: message.isUser  
                 ? const Radius.circular(16)
                 : Radius.zero,
             bottomRight: message.isUser
@@ -51,9 +52,7 @@ class ChatBubble extends StatelessWidget {
                   message.text,
                   TextStyle(
                     color: message.isUser
-                        ? (isDarkMode
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.onPrimary)
+                        ? Theme.of(context).colorScheme.onSurface
                         : Theme.of(context).colorScheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -104,6 +103,8 @@ class ChatBubble extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 
