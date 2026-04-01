@@ -336,6 +336,16 @@ class _ChatScreenState extends State<ChatScreen> {
           });
           Navigator.pop(context); // close drawer
         },
+        onChatDeleted: (chatId) {
+          Navigator.pop(context); // close drawer
+          if (_currentChatId == chatId) {
+            setState(() {
+              _messages.clear();
+              _currentChatId = null;
+              _input_type = InputType.text;
+            });
+          }
+        },
         onChatSelected: (chatId) async {
           Navigator.pop(context); // close drawer
           setState(() {

@@ -10,6 +10,7 @@ class MenuDrawer extends StatelessWidget {
   final String? currentChatId;
   final VoidCallback onNewChat;
   final Function(String) onChatSelected;
+  final Function(String) onChatDeleted;
 
   const MenuDrawer({
     super.key, 
@@ -17,6 +18,7 @@ class MenuDrawer extends StatelessWidget {
     this.currentChatId,
     required this.onNewChat,
     required this.onChatSelected,
+    required this.onChatDeleted,
   });
 
   @override
@@ -418,7 +420,20 @@ class MenuDrawer extends StatelessWidget {
               );
               
               if (confirm == true && userId.isNotEmpty) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+                
                 await ChatService().deleteChat(userId, chatId);
+                
+                if (context.mounted) {
+                  Navigator.pop(context); // pop loading dialog
+                  onChatDeleted(chatId);
+                }
               }
             }
           },
