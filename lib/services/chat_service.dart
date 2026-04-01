@@ -7,9 +7,21 @@ class ChatService {
 
   // 1. Create a new chat session
   Future<String> createChatSession(String userId, String firstMessageText) async {
-    String title = firstMessageText.length > 25 
-        ? '${firstMessageText.substring(0, 25)}...' 
-        : firstMessageText;
+    // Make chat title unique and well-formatted
+    String baseName = firstMessageText.trim();
+    if (baseName.length > 20) {
+      baseName = '${baseName.substring(0, 20)}...';
+    }
+    // Capitalize first letter for a proper look
+    if (baseName.isNotEmpty) {
+      baseName = baseName[0].toUpperCase() + baseName.substring(1);
+    }
+    
+    // Add a date/time stamp to assure uniqueness
+    final now = DateTime.now();
+    final timeString = '${now.month}/${now.day} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+    
+    String title = '$baseName - $timeString';
 
     final docRef = await _db.collection('users').doc(userId).collection('chats').add({
       'title': title,

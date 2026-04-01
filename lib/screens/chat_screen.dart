@@ -330,6 +330,7 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             _messages.clear();
             _currentChatId = null;
+            _input_type = InputType.text;
           });
           Navigator.pop(context); // close drawer
         },
@@ -338,6 +339,7 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             _messages.clear();
             _currentChatId = chatId;
+            _input_type = InputType.text;
             _isTyping = true; // wait for fetch
           });
           
