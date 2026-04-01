@@ -64,6 +64,12 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         setState(() {
           _isLoggedIn = user != null;
+          if (user == null) {
+            _messages.clear();
+            _currentChatId = null;
+            _input_type = InputType.text;
+            _isLoadingChat = false;
+          }
         });
       }
     });
