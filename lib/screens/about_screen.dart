@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'terms_screen.dart';
 import 'privacy_screen.dart';
@@ -12,6 +13,7 @@ class AboutScreen extends StatefulWidget {
 class _AboutScreenState extends State<AboutScreen> {
   final String _version = '1.0.0';
   final String _buildNumber = '1';
+  final _isLoggedIn = FirebaseAuth.instance.currentUser != null;
 
   @override
   void initState() {
@@ -67,23 +69,25 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(height: 40),
 
             _buildSettingsContainer([
-              ListTile(
-                leading: const Icon(Icons.description_outlined),
-                title: const Text('Terms of Service', style: TextStyle(fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsScreen()));
-                },
-              ),
-              const Divider(height: 1, indent: 50),
-              ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined),
-                title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
-                },
-              ),
+              if (_isLoggedIn) ...[
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('Terms of Service', style: TextStyle(fontWeight: FontWeight.w500)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsScreen()));
+                  },
+                ),
+                const Divider(height: 1, indent: 50),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w500)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
+                  },
+                ),
+              ],
               const Divider(height: 1, indent: 50),
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
