@@ -5,6 +5,9 @@ import '../widgets/appearance_dialog.dart';
 import '../widgets/accent_color_dialog.dart';
 import '../utils/theme_manager.dart';
 import '../services/auth_service.dart';
+import 'voice_selection_screen.dart';
+import '../services/user_service.dart';
+import '../utils/voices_data.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,12 +17,39 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final user = FirebaseAuth.instance.currentUser;
+  final UserService _userService = UserService();
+  String email = "";
+  String name = "";
+  String initial = "";
+  String _userVoice = "";
+
+  @override
+  void initState() {
+    super.initState();
+    email = user?.email ?? 'unknown@example.com';
+    name = user?.displayName ?? email.split('@').first;
+    initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    _loadUserVoice();
+  }
+
+  Future<void> _loadUserVoice() async {
+    if (user != null) {
+      final voiceId = await _userService.getUserVoice(user!.uid);
+      final voiceMap = voiceList.firstWhere(
+        (v) => v['id'] == voiceId,
+        orElse: () => {"name": voiceId},
+      );
+      if (mounted) {
+        setState(() {
+          _userVoice = voiceMap['name'];
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email ?? 'unknown@example.com';
-    final name = user?.displayName ?? email.split('@').first;
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
     
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
@@ -186,6 +216,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 context,
                 icon: Icons.graphic_eq,
                 title: 'Voice',
+                subtitle: _userVoice.isEmpty ? 'Loading...' : _userVoice,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VoiceSelectionScreen(),
+                    ),
+                  );
+                  _loadUserVoice();
+                },
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(

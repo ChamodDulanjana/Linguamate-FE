@@ -6,6 +6,7 @@ import '../widgets/login_sheet.dart';
 import '../widgets/menu_drawer.dart';
 import '../services/chat_api_service.dart';
 import '../services/chat_service.dart';
+import '../services/user_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'dart:convert';
@@ -34,6 +35,8 @@ class _ChatScreenState extends State<ChatScreen> {
   StreamSubscription<User?>? _authStateSubscription;
   String? _currentChatId;
   bool _isLoadingChat = false;
+  final currentUser = FirebaseAuth.instance.currentUser;
+  String _voiceType = 'alloy';
 
   @override
   void dispose() {
@@ -42,6 +45,12 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadVoiceType() async {
+    if (currentUser != null) {
+      _voiceType = await UserService().getUserVoice(currentUser!.uid);
+    }
   }
 
   void _scrollToBottom() {
@@ -59,7 +68,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    _isLoggedIn = currentUser != null;
+    _loadVoiceType();
     _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (mounted) {
         setState(() {
@@ -138,12 +148,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     // Save user message to database if logged in
-    final user = FirebaseAuth.instance.currentUser;
-    if (_isLoggedIn && user != null) {
+    if (_isLoggedIn && currentUser != null) {
       if (_currentChatId == null) {
-        _currentChatId = await ChatService().createChatSession(user.uid, text);
+        _currentChatId = await ChatService().createChatSession(currentUser!.uid, text);
       }
-      await ChatService().saveMessage(user.uid, _currentChatId!, userMessage);
+      await ChatService().saveMessage(currentUser!.uid, _currentChatId!, userMessage);
     }
 
     // Retrieve AI response
@@ -190,16 +199,15 @@ class _ChatScreenState extends State<ChatScreen> {
             language = data["language"] ?? "en";
 
             void saveToDb(ChatMessage msg) async {
-              final user = FirebaseAuth.instance.currentUser;
-              if (_isLoggedIn && user != null && _currentChatId != null) {
-                await ChatService().saveMessage(user.uid, _currentChatId!, msg);
+              if (_isLoggedIn && currentUser != null && _currentChatId != null) {
+                await ChatService().saveMessage(currentUser!.uid, _currentChatId!, msg);
               }
             }
 
             // SPEECH MODE DISPLAY AFTER SPEAKING
             if (_input_type == InputType.speech) {
               try {
-                final uri = await ChatApiService.getSentence(displayResponseText, language);
+                final uri = await ChatApiService.getSentence(displayResponseText, language, _voiceType);
                 await _voicePlayer.setAudioSource(AudioSource.uri(uri));
                 _voicePlayer.play();
 

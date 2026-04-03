@@ -25,20 +25,22 @@ class ChatApiService {
     }
   }
 
-  static Future<Uri> getSentence(String text, String language) async {
+  static Future<Uri> getSentence(String text, String language, String voice_type) async {
     final url = Uri.parse(
       "$baseUrl/tts/sentence"
       "?text=${Uri.encodeComponent(text)}"
-      "&language=$language",
+      "&language=$language"
+      "&voice_type=$voice_type",
     );
     return url;
   }
 
-  static Future<Uri> getStream(String text, String language) async {
+  static Future<Uri> getStream(String text, String language, String voice_type) async {
     final url = Uri.parse(
       "$baseUrl/tts/stream"
       "?text=${Uri.encodeComponent(text)}"
-      "&language=$language",
+      "&language=$language"
+      "&voice_type=$voice_type",
     );
     return url;
   }
