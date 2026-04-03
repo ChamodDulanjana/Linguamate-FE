@@ -87,7 +87,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           _buildSimpleMenuItem("Terms", onTap: () {
             Navigator.pop(context);
             Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsScreen()));
@@ -96,6 +96,11 @@ class _MenuDrawerState extends State<MenuDrawer> {
           _buildSimpleMenuItem("Privacy", onTap: () {
             Navigator.pop(context);
             Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
+          }),
+          const SizedBox(height: 8),
+          _buildSimpleMenuItem("Settings", onTap: () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
           }),
           const Spacer(),
           Text(

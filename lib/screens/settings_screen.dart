@@ -20,6 +20,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final user = FirebaseAuth.instance.currentUser;
+  bool isLoggedIn = false;
   final UserService _userService = UserService();
   String email = "";
   String name = "";
@@ -32,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     email = user?.email ?? 'unknown@example.com';
     name = user?.displayName ?? email.split('@').first;
     initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    isLoggedIn = user != null;
     _loadUserVoice();
   }
 
@@ -82,7 +84,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           children: [
             // Profile Section
-            const SizedBox(height: 10),
+            if (isLoggedIn) ...[
+              const SizedBox(height: 10),
             CircleAvatar(
               radius: 40,
               backgroundColor: const Color(0xFFFFD700),
@@ -165,6 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ]),
             const SizedBox(height: 24),
+            ],
 
             // Appearance & Accent
             AnimatedBuilder(
@@ -214,10 +218,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // General Settings
             _buildSettingsContainer(context, [
-              _buildSettingItem(
-                context,
-                icon: Icons.graphic_eq,
-                title: 'Voice',
+              if (isLoggedIn) ...[
+                _buildSettingItem(
+                  context,
+                  icon: Icons.graphic_eq,
+                  title: 'Voice',
                 subtitle: _userVoice.isEmpty ? 'Loading...' : _userVoice,
                 onTap: () async {
                   await Navigator.push(
@@ -242,6 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               const Divider(height: 1, indent: 50),
+              ],
               _buildSettingItem(
                 context,
                 icon: Icons.info_outline,
@@ -257,23 +263,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
 
             // Log out
-            _buildSettingsContainer(context, [
-              _buildSettingItem(
-                context,
-                icon: Icons.logout,
-                title: 'Log out',
-                textColor: Colors.red,
-                iconColor: Colors.red,
-                showArrow: false,
-                onTap: () async {
-                  await AuthService().logout();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-            ]),
-            const SizedBox(height: 40),
+            if (isLoggedIn) ...[
+              _buildSettingsContainer(context, [
+                _buildSettingItem(
+                  context,
+                  icon: Icons.logout,
+                  title: 'Log out',
+                  textColor: Colors.red,
+                  iconColor: Colors.red,
+                  showArrow: false,
+                  onTap: () async {
+                    await AuthService().logout();
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ]),
+              const SizedBox(height: 40),
+            ],
           ],
         ),
       ),
