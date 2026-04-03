@@ -4,6 +4,8 @@ import '../models/chat_history.dart';
 import '../screens/settings_screen.dart';
 import '../services/chat_service.dart';
 import 'login_sheet.dart';
+import '../screens/terms_screen.dart';
+import '../screens/privacy_screen.dart';
 
 class MenuDrawer extends StatefulWidget {
   final bool isLoggedIn;
@@ -57,27 +59,44 @@ class _MenuDrawerState extends State<MenuDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Image.asset(
-                'assets/images/edit_icon.png',
-                color: Theme.of(context).colorScheme.onSurface,
-                width: 20,
-                height: 20,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onNewChat,
+              borderRadius: BorderRadius.circular(8),
+              splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              hoverColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/edit_icon.png',
+                      color: Theme.of(context).colorScheme.onSurface,
+                      width: 20,
+                      height: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'New chat',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                'New chat',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 32),
-          _buildSimpleMenuItem("Terms"),
           const SizedBox(height: 24),
-          _buildSimpleMenuItem("Privacy"),
-          const SizedBox(height: 24),
-          _buildSimpleMenuItem("Settings"),
+          _buildSimpleMenuItem("Terms", onTap: () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsScreen()));
+          }),
+          const SizedBox(height: 8),
+          _buildSimpleMenuItem("Privacy", onTap: () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
+          }),
           const Spacer(),
           Text(
             "Save your chat history and personalize your experience.",
@@ -122,15 +141,31 @@ class _MenuDrawerState extends State<MenuDrawer> {
     );
   }
 
-  Widget _buildSimpleMenuItem(String title) {
-    return InkWell(
-      onTap: () {},
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  Widget _buildSimpleMenuItem(String title, {VoidCallback? onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap ?? () {},
+        borderRadius: BorderRadius.circular(8),
+        splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+        highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+        hoverColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          child: Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+
 
   // If user is logged in
   Widget _buildUserContent(BuildContext context) {
