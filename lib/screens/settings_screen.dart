@@ -8,6 +8,8 @@ import '../services/auth_service.dart';
 import 'voice_selection_screen.dart';
 import '../services/user_service.dart';
 import '../utils/voices_data.dart';
+import 'security_screen.dart';
+import 'about_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -232,12 +234,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 context,
                 icon: Icons.security_outlined,
                 title: 'Security',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SecurityScreen()),
+                  );
+                },
               ),
               const Divider(height: 1, indent: 50),
               _buildSettingItem(
                 context,
                 icon: Icons.info_outline,
                 title: 'About',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AboutScreen()),
+                  );
+                },
               ),
             ]),
             const SizedBox(height: 24),
