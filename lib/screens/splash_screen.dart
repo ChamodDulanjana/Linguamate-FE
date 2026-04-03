@@ -20,13 +20,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo.png', width: 120, height: 120),
+            isDarkMode 
+            ? Image.asset('assets/images/linguamate_light_logo.png', width: 120, height: 120) 
+            : Image.asset('assets/images/linguamate_logo.png', width: 120, height: 120),
             const SizedBox(height: 40),
             Text(
               'LINGUAMATE',
